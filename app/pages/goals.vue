@@ -45,6 +45,8 @@ async function onDelete(id: string): Promise<void> {
   await remove(id);
   toast.add({ title: "Goal deleted", color: "neutral" });
 }
+
+useCreateIntent(openCreate);
 </script>
 
 <template>
@@ -52,10 +54,9 @@ async function onDelete(id: string): Promise<void> {
     <AppPageHeader
       title="Goals"
       description="The outcomes you're aiming for this year — track status and progress."
-      icon="i-lucide-target"
     >
       <template #actions>
-        <UButton icon="i-lucide-plus" label="Add" @click="openCreate" />
+        <UButton icon="i-lucide-plus" label="New" @click="openCreate" />
       </template>
     </AppPageHeader>
 
@@ -81,14 +82,14 @@ async function onDelete(id: string): Promise<void> {
       </template>
     </AppEmptyState>
 
-    <div v-else class="space-y-7">
+    <div v-else class="space-y-9">
       <section v-for="[year, yearGoals] in groupedByYear" :key="year">
         <h3
-          class="mb-3 text-sm font-semibold tracking-wide text-[var(--ui-text-dimmed)] uppercase"
+          class="mb-4 text-xs font-semibold tracking-wide text-[var(--ui-text-dimmed)] uppercase"
         >
           {{ year }}
         </h3>
-        <div class="grid gap-3 md:grid-cols-2">
+        <div class="grid gap-4 md:grid-cols-2">
           <GoalCard
             v-for="goal in yearGoals"
             :key="goal.id"

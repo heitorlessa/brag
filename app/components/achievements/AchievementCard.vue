@@ -17,27 +17,22 @@ const hasBody = computed(
 </script>
 
 <template>
-  <UCard :ui="{ body: 'space-y-3' }">
+  <article class="surface surface-hover h-full space-y-3 p-5">
     <div class="flex items-start justify-between gap-3">
       <div class="min-w-0">
         <h3 class="font-semibold text-[var(--ui-text-highlighted)]">
           {{ achievement.title }}
         </h3>
         <div
-          class="mt-1 flex flex-wrap items-center gap-2 text-xs text-[var(--ui-text-dimmed)]"
+          class="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[var(--ui-text-dimmed)]"
         >
           <span class="inline-flex items-center gap-1">
             <UIcon name="i-lucide-calendar" class="size-3.5" />
             {{ formatDate(achievement.occurredAt) }}
           </span>
-          <UBadge
-            v-if="achievement.category"
-            color="neutral"
-            variant="soft"
-            size="sm"
-          >
+          <span v-if="achievement.category" class="text-[var(--ui-text-muted)]">
             {{ achievement.category }}
-          </UBadge>
+          </span>
           <span
             v-if="goalTitle"
             class="text-primary inline-flex items-center gap-1"
@@ -47,7 +42,9 @@ const hasBody = computed(
           </span>
         </div>
       </div>
-      <div class="flex shrink-0 gap-1">
+      <div
+        class="flex shrink-0 gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 sm:opacity-60 sm:hover:opacity-100"
+      >
         <UButton
           icon="i-lucide-pencil"
           color="neutral"
@@ -81,7 +78,7 @@ const hasBody = computed(
 
     <div
       v-if="achievement.tags.length || hasBody"
-      class="flex items-center justify-between gap-2"
+      class="flex items-center justify-between gap-2 pt-1"
     >
       <div class="flex flex-wrap gap-1">
         <UBadge
@@ -96,7 +93,7 @@ const hasBody = computed(
       </div>
       <UButton
         v-if="hasBody"
-        :label="expanded ? 'Show less' : 'Show more'"
+        :label="expanded ? 'Less' : 'More'"
         :trailing-icon="
           expanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'
         "
@@ -106,5 +103,5 @@ const hasBody = computed(
         @click="expanded = !expanded"
       />
     </div>
-  </UCard>
+  </article>
 </template>

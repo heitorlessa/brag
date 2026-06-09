@@ -1,6 +1,7 @@
 <script setup lang="ts">
-// Root component. <UApp> provides Nuxt UI's global overlay/toast context.
-// The default layout renders the dashboard shell (sidebar + content).
+// Root component. <UApp> provides Nuxt UI's global overlay/toast context;
+// <MotionConfig reduce-motion="user"> makes motion-v honor the OS
+// "reduce motion" setting everywhere.
 useHead({
   htmlAttrs: { lang: "en" },
 });
@@ -8,8 +9,10 @@ useHead({
 
 <template>
   <UApp>
-    <NuxtLayout>
-      <NuxtPage />
-    </NuxtLayout>
+    <MotionConfig :reduced-motion="'user'">
+      <NuxtLayout>
+        <NuxtPage />
+      </NuxtLayout>
+    </MotionConfig>
   </UApp>
 </template>

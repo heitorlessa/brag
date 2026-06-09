@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import type { NavigationMenuItem } from "@nuxt/ui";
-
-// Primary navigation. Each entry maps to a page under app/pages.
-const links = computed<NavigationMenuItem[]>(() => [
-  { label: "Dashboard", icon: "i-lucide-layout-dashboard", to: "/" },
-  { label: "Achievements", icon: "i-lucide-trophy", to: "/achievements" },
-  { label: "Goals", icon: "i-lucide-target", to: "/goals" },
-  { label: "Mentoring", icon: "i-lucide-users", to: "/mentoring" },
-  { label: "Enablement", icon: "i-lucide-presentation", to: "/enablement" },
-  { label: "Energy", icon: "i-lucide-battery-charging", to: "/energy" },
-]);
-
 const route = useRoute();
+const { toggle: togglePalette, open: openPalette } = useCommandPalette();
+
+// ⌘K / Ctrl-K opens the command palette anywhere.
+defineShortcuts({
+  meta_k: () => togglePalette(),
+  ctrl_k: () => togglePalette(),
+});
+
 const pageTitle = computed(
   () => (route.meta.title as string | undefined) ?? "Brag"
 );
@@ -27,18 +23,16 @@ watch(
 
 <template>
   <div class="flex h-screen bg-[var(--ui-bg)] text-[var(--ui-text)]">
-    <!-- Sidebar (desktop) -->
+    <!-- Icon rail (desktop) -->
     <aside
-      class="hidden w-60 shrink-0 flex-col border-r border-[var(--ui-border)] bg-[var(--ui-bg-muted)]/40 md:flex"
+      class="hidden w-[72px] shrink-0 flex-col border-r border-[var(--ui-border)]/70 md:flex"
     >
-      <AppSidebarContent :links="links" />
+      <AppRail />
     </aside>
 
     <!-- Main column -->
     <div class="flex min-w-0 flex-1 flex-col">
-      <header
-        class="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--ui-border)] px-4"
-      >
+      <header class="flex h-16 shrink-0 items-center gap-3 px-4 sm:px-6">
         <UButton
           class="md:hidden"
           icon="i-lucide-menu"
@@ -46,33 +40,51 @@ watch(
           variant="ghost"
           @click="mobileNavOpen = true"
         />
-        <h1 class="text-base font-semibold text-[var(--ui-text-highlighted)]">
+
+        <button
+          type="button"
+          class="group flex h-9 w-full max-w-sm items-center gap-2 rounded-xl bg-[var(--ui-bg-muted)]/60 px-3 text-sm text-[var(--ui-text-dimmed)] ring-1 ring-transparent transition hover:ring-[var(--ui-border)]"
+          @click="openPalette()"
+        >
+          <UIcon name="i-lucide-search" class="size-4" />
+          <span>Search or jump to…</span>
+          <span class="ms-auto hidden items-center gap-0.5 sm:flex">
+            <UKbd value="meta" />
+            <UKbd value="k" />
+          </span>
+        </button>
+
+        <span
+          class="ms-auto text-xs font-medium text-[var(--ui-text-dimmed)] sm:hidden"
+        >
           {{ pageTitle }}
-        </h1>
-        <div class="ms-auto flex items-center gap-1">
-          <UColorModeButton />
-          <UButton
-            icon="i-lucide-settings"
-            color="neutral"
-            variant="ghost"
-            to="/settings"
-            aria-label="Settings"
-          />
-        </div>
+        </span>
       </header>
 
       <main class="min-h-0 flex-1 overflow-y-auto">
-        <div class="mx-auto w-full max-w-6xl p-4 sm:p-6">
+        <Motion
+          :key="route.path"
+          :initial="{ opacity: 0, y: 8 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :transition="{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }"
+          class="mx-auto w-full max-w-5xl px-4 pt-2 pb-16 sm:px-8"
+        >
           <slot />
-        </div>
+        </Motion>
       </main>
     </div>
 
-    <!-- Sidebar (mobile slideover) -->
-    <USlideover v-model:open="mobileNavOpen" side="left">
+    <!-- Rail (mobile slideover) -->
+    <USlideover
+      v-model:open="mobileNavOpen"
+      side="left"
+      :ui="{ content: 'w-64' }"
+    >
       <template #content>
-        <AppSidebarContent :links="links" />
+        <AppRail expanded />
       </template>
     </USlideover>
+
+    <AppCommandPalette />
   </div>
 </template>

@@ -34,6 +34,8 @@ async function onDelete(id: string): Promise<void> {
   await remove(id);
   toast.add({ title: "Person deleted", color: "neutral" });
 }
+
+useCreateIntent(openCreate);
 </script>
 
 <template>
@@ -41,10 +43,9 @@ async function onDelete(id: string): Promise<void> {
     <AppPageHeader
       title="Mentoring"
       description="People you mentor — ad-hoc or regular — and the sessions you've had."
-      icon="i-lucide-users"
     >
       <template #actions>
-        <UButton icon="i-lucide-plus" label="Add" @click="openCreate" />
+        <UButton icon="i-lucide-plus" label="New" @click="openCreate" />
       </template>
     </AppPageHeader>
 
@@ -70,14 +71,18 @@ async function onDelete(id: string): Promise<void> {
       </template>
     </AppEmptyState>
 
-    <div v-else class="grid gap-3 md:grid-cols-2">
-      <PersonCard
-        v-for="person in people"
+    <div v-else class="grid items-start gap-4 md:grid-cols-2">
+      <FadeIn
+        v-for="(person, index) in people"
         :key="person.id"
-        :person="person"
-        @edit="openEdit(person)"
-        @delete="onDelete(person.id)"
-      />
+        :delay="Math.min(index * 0.04, 0.3)"
+      >
+        <PersonCard
+          :person="person"
+          @edit="openEdit(person)"
+          @delete="onDelete(person.id)"
+        />
+      </FadeIn>
     </div>
 
     <PersonFormModal

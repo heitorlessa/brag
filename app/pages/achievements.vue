@@ -39,6 +39,9 @@ function openEdit(achievement: Achievement): void {
   modalOpen.value = true;
 }
 
+// Opens the create modal when reached via the command palette (?new=1).
+useCreateIntent(openCreate);
+
 async function onSaved(
   input: AchievementInput,
   id: string | null
@@ -63,10 +66,9 @@ async function onDelete(id: string): Promise<void> {
     <AppPageHeader
       title="Achievements"
       description="Capture your wins as they happen — the raw material for brag docs and reviews."
-      icon="i-lucide-trophy"
     >
       <template #actions>
-        <UButton icon="i-lucide-plus" label="Add" @click="openCreate" />
+        <UButton icon="i-lucide-plus" label="New" @click="openCreate" />
       </template>
     </AppPageHeader>
 
@@ -108,17 +110,21 @@ async function onDelete(id: string): Promise<void> {
       No matches for “{{ search }}”.
     </p>
 
-    <div v-else class="grid gap-3 md:grid-cols-2">
-      <AchievementCard
-        v-for="achievement in filtered"
+    <div v-else class="grid gap-4 md:grid-cols-2">
+      <FadeIn
+        v-for="(achievement, index) in filtered"
         :key="achievement.id"
-        :achievement="achievement"
-        :goal-title="
-          achievement.goalId ? goalTitleById.get(achievement.goalId) : null
-        "
-        @edit="openEdit(achievement)"
-        @delete="onDelete(achievement.id)"
-      />
+        :delay="Math.min(index * 0.04, 0.3)"
+      >
+        <AchievementCard
+          :achievement="achievement"
+          :goal-title="
+            achievement.goalId ? goalTitleById.get(achievement.goalId) : null
+          "
+          @edit="openEdit(achievement)"
+          @delete="onDelete(achievement.id)"
+        />
+      </FadeIn>
     </div>
 
     <AchievementFormModal

@@ -85,7 +85,6 @@ const sliders = [
     <AppPageHeader
       title="Energy"
       description="A weekly check-in to catch burnout early and know when you need a reset."
-      icon="i-lucide-battery-charging"
     />
 
     <UAlert
@@ -94,12 +93,12 @@ const sliders = [
       variant="soft"
       :title="signal.title"
       :description="signal.message"
-      class="mb-5"
+      class="mb-6"
     />
 
     <div class="grid gap-5 lg:grid-cols-2">
       <!-- Weekly reflection form -->
-      <UCard :ui="{ body: 'space-y-4' }">
+      <section class="surface space-y-4 p-5 sm:p-6">
         <div class="flex items-center justify-between gap-3">
           <h3 class="font-semibold text-[var(--ui-text-highlighted)]">
             Reflection
@@ -138,10 +137,10 @@ const sliders = [
             @click="onSave"
           />
         </div>
-      </UCard>
+      </section>
 
       <!-- Trend -->
-      <UCard :ui="{ body: 'space-y-3' }">
+      <section class="surface space-y-3 p-5 sm:p-6">
         <h3 class="font-semibold text-[var(--ui-text-highlighted)]">Trend</h3>
         <EnergyTrendChart v-if="chartData.length" :reflections="chartData" />
         <p
@@ -150,7 +149,7 @@ const sliders = [
         >
           Save a few weeks to see your trend.
         </p>
-      </UCard>
+      </section>
     </div>
 
     <!-- History -->
@@ -171,45 +170,45 @@ const sliders = [
     >
       No reflections yet.
     </p>
-    <div v-else class="space-y-2">
-      <UCard
+    <div v-else class="surface divide-hair overflow-hidden">
+      <div
         v-for="reflection in recent"
         :key="reflection.id"
-        :ui="{ body: 'py-3' }"
+        class="group flex items-center justify-between gap-3 p-4 transition-colors hover:bg-[var(--ui-bg-muted)]/40 sm:px-5"
       >
-        <div class="flex items-center justify-between gap-3">
-          <div class="min-w-0">
-            <p class="text-sm font-medium text-[var(--ui-text)]">
-              {{ formatWeekLabel(reflection.weekStart) }}
-            </p>
-            <div class="mt-1 flex gap-3 text-xs text-[var(--ui-text-muted)]">
-              <span>⚡ {{ reflection.energy }}</span>
-              <span>📊 {{ reflection.workload }}</span>
-              <span>😊 {{ reflection.satisfaction }}</span>
-            </div>
-            <p
-              v-if="reflection.note"
-              class="mt-1 truncate text-xs text-[var(--ui-text-dimmed)]"
-            >
-              {{ markdownExcerpt(reflection.note, 100) }}
-            </p>
+        <div class="min-w-0">
+          <p class="text-sm font-medium text-[var(--ui-text)]">
+            {{ formatWeekLabel(reflection.weekStart) }}
+          </p>
+          <div class="mt-1 flex gap-3 text-xs text-[var(--ui-text-muted)]">
+            <span>⚡ {{ reflection.energy }}</span>
+            <span>📊 {{ reflection.workload }}</span>
+            <span>😊 {{ reflection.satisfaction }}</span>
           </div>
-          <div class="flex shrink-0 gap-1">
-            <UButton
-              icon="i-lucide-pencil"
-              color="neutral"
-              variant="ghost"
-              size="xs"
-              aria-label="Edit"
-              @click="editWeek(reflection.weekStart)"
-            />
-            <ConfirmButton
-              message="Delete this reflection?"
-              @confirm="onDelete(reflection.id)"
-            />
-          </div>
+          <p
+            v-if="reflection.note"
+            class="mt-1 truncate text-xs text-[var(--ui-text-dimmed)]"
+          >
+            {{ markdownExcerpt(reflection.note, 100) }}
+          </p>
         </div>
-      </UCard>
+        <div
+          class="flex shrink-0 gap-0.5 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
+        >
+          <UButton
+            icon="i-lucide-pencil"
+            color="neutral"
+            variant="ghost"
+            size="xs"
+            aria-label="Edit"
+            @click="editWeek(reflection.weekStart)"
+          />
+          <ConfirmButton
+            message="Delete this reflection?"
+            @confirm="onDelete(reflection.id)"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>

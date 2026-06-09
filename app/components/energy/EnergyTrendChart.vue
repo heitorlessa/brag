@@ -34,6 +34,18 @@ function polyline(key: "energy" | "workload" | "satisfaction"): string {
     .join(" ");
 }
 
+// Area under the energy line, closed down to the baseline.
+const energyArea = computed(() => {
+  if (!points.value.length) return "";
+  const line = points.value
+    .map((reflection, index) => `${xAt(index)},${yAt(reflection.energy)}`)
+    .join(" ");
+  const baseY = yAt(1);
+  const lastX = xAt(points.value.length - 1);
+  const firstX = xAt(0);
+  return `${line} ${lastX},${baseY} ${firstX},${baseY}`;
+});
+
 const yTicks = [1, 2, 3, 4, 5];
 
 const xLabels = computed(() => {
@@ -78,6 +90,21 @@ const xLabels = computed(() => {
       role="img"
       aria-label="Weekly energy, workload and satisfaction trend"
     >
+      <defs>
+        <linearGradient id="brag-energy-area" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.18" />
+          <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+
+      <!-- Area under the energy series -->
+      <polygon
+        v-if="energyArea"
+        :points="energyArea"
+        fill="url(#brag-energy-area)"
+        class="brag-area"
+      />
+
       <!-- Y gridlines + labels -->
       <g>
         <line
@@ -115,7 +142,7 @@ const xLabels = computed(() => {
       </text>
 
       <!-- Series -->
-      <g v-for="s in series" :key="s.key">
+      <g v-for="(s, sIndex) in series" :key="s.key">
         <polyline
           :points="polyline(s.key)"
           fill="none"
@@ -123,6 +150,9 @@ const xLabels = computed(() => {
           stroke-width="2"
           stroke-linejoin="round"
           stroke-linecap="round"
+          pathLength="1"
+          class="brag-line"
+          :style="{ animationDelay: `${sIndex * 0.12}s` }"
         />
         <circle
           v-for="(reflection, index) in points"

@@ -37,6 +37,8 @@ async function onDelete(id: string): Promise<void> {
   await remove(id);
   toast.add({ title: "Enablement deleted", color: "neutral" });
 }
+
+useCreateIntent(openCreate);
 </script>
 
 <template>
@@ -44,10 +46,9 @@ async function onDelete(id: string): Promise<void> {
     <AppPageHeader
       title="Enablement"
       description="Workshops, talks, training and docs you ran to level others up."
-      icon="i-lucide-presentation"
     >
       <template #actions>
-        <UButton icon="i-lucide-plus" label="Add" @click="openCreate" />
+        <UButton icon="i-lucide-plus" label="New" @click="openCreate" />
       </template>
     </AppPageHeader>
 
@@ -73,56 +74,59 @@ async function onDelete(id: string): Promise<void> {
       </template>
     </AppEmptyState>
 
-    <div v-else class="space-y-3">
-      <UCard
-        v-for="item in enablement"
-        :key="item.id"
-        :ui="{ body: 'space-y-2' }"
-      >
-        <div class="flex items-start justify-between gap-3">
-          <div class="flex min-w-0 items-start gap-3">
-            <span
-              class="bg-secondary/10 text-secondary mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg"
+    <FadeIn v-else>
+      <div class="surface divide-hair overflow-hidden">
+        <div
+          v-for="item in enablement"
+          :key="item.id"
+          class="group flex items-start gap-4 p-4 transition-colors hover:bg-[var(--ui-bg-muted)]/40 sm:px-5"
+        >
+          <span
+            class="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-[var(--ui-bg-muted)] text-[var(--ui-text-muted)]"
+          >
+            <UIcon :name="enablementTypeMeta[item.type].icon" class="size-4" />
+          </span>
+          <div class="min-w-0 flex-1">
+            <h3 class="font-medium text-[var(--ui-text-highlighted)]">
+              {{ item.title }}
+            </h3>
+            <div
+              class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ui-text-dimmed)]"
             >
-              <UIcon
-                :name="enablementTypeMeta[item.type].icon"
-                class="size-5"
-              />
-            </span>
-            <div class="min-w-0">
-              <h3 class="font-semibold text-[var(--ui-text-highlighted)]">
-                {{ item.title }}
-              </h3>
-              <div
-                class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--ui-text-dimmed)]"
+              <span>{{ enablementTypeMeta[item.type].label }}</span>
+              <span class="inline-flex items-center gap-1">
+                <UIcon name="i-lucide-calendar" class="size-3.5" />
+                {{ formatDate(item.date) }}
+              </span>
+              <span v-if="item.audience">{{ item.audience }}</span>
+              <span
+                v-if="item.attendees != null"
+                class="inline-flex items-center gap-1"
               >
-                <span>{{ enablementTypeMeta[item.type].label }}</span>
-                <span class="inline-flex items-center gap-1">
-                  <UIcon name="i-lucide-calendar" class="size-3.5" />
-                  {{ formatDate(item.date) }}
-                </span>
-                <span v-if="item.audience">{{ item.audience }}</span>
-                <span
-                  v-if="item.attendees != null"
-                  class="inline-flex items-center gap-1"
-                >
-                  <UIcon name="i-lucide-users" class="size-3.5" />
-                  {{ item.attendees }}
-                </span>
-                <a
-                  v-if="item.link"
-                  :href="item.link"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-primary inline-flex items-center gap-1 hover:underline"
-                >
-                  <UIcon name="i-lucide-link" class="size-3.5" />
-                  Link
-                </a>
-              </div>
+                <UIcon name="i-lucide-users" class="size-3.5" />
+                {{ item.attendees }}
+              </span>
+              <a
+                v-if="item.link"
+                :href="item.link"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-primary inline-flex items-center gap-1 hover:underline"
+              >
+                <UIcon name="i-lucide-link" class="size-3.5" />
+                Link
+              </a>
             </div>
+            <p
+              v-if="item.notes"
+              class="mt-2 text-sm text-[var(--ui-text-muted)]"
+            >
+              {{ markdownExcerpt(item.notes) }}
+            </p>
           </div>
-          <div class="flex shrink-0 gap-1">
+          <div
+            class="flex shrink-0 gap-0.5 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100"
+          >
             <UButton
               icon="i-lucide-pencil"
               color="neutral"
@@ -137,11 +141,8 @@ async function onDelete(id: string): Promise<void> {
             />
           </div>
         </div>
-        <p v-if="item.notes" class="text-sm text-[var(--ui-text-muted)]">
-          {{ markdownExcerpt(item.notes) }}
-        </p>
-      </UCard>
-    </div>
+      </div>
+    </FadeIn>
 
     <EnablementFormModal
       v-model:open="modalOpen"

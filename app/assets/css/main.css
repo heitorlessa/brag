@@ -7,11 +7,18 @@
 
 @theme static {
   --font-sans: "Public Sans", system-ui, sans-serif;
+  /* Softer corners across the whole UI for a refined, minimal feel. */
+  --ui-radius: 0.5rem;
 }
 
 /* Prevent layout shift when the scrollbar appears */
 html {
   scrollbar-gutter: stable;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 @layer theme {
@@ -29,7 +36,22 @@ html {
   }
 }
 
-/* Rendered Markdown (RichTextEditor + read-only prose) */
+/* ── Surfaces ──────────────────────────────────────────────────────────────
+   A lighter alternative to UCard: hairline ring, soft radius, no shadow until
+   hover. Used to reduce card-heaviness while keeping gentle grouping. */
+.surface {
+  @apply rounded-2xl ring-1 ring-[var(--ui-border)]/70;
+}
+.surface-hover {
+  @apply transition-all duration-200 hover:shadow-[0_2px_24px_-12px_rgba(0,0,0,0.25)] hover:ring-[var(--ui-border)];
+}
+
+/* Hairline row divider list */
+.divide-hair > * + * {
+  @apply border-t border-[var(--ui-border)]/60;
+}
+
+/* ── Rendered Markdown (RichTextEditor + read-only prose) ──────────────────── */
 .brag-prose {
   @apply text-sm leading-relaxed text-[var(--ui-text-toned)];
 }
@@ -52,7 +74,7 @@ html {
   @apply my-1 list-decimal pl-5;
 }
 .brag-prose a {
-  @apply text-primary underline;
+  @apply text-primary underline underline-offset-2;
 }
 .brag-prose code {
   @apply rounded bg-[var(--ui-bg-muted)] px-1 py-0.5 text-xs;
@@ -65,4 +87,61 @@ html {
 }
 .brag-prose:focus {
   @apply outline-none;
+}
+
+/* ── Motion fallbacks (used where motion-v isn't worth a wrapper) ──────────── */
+@keyframes brag-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: brag-fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up {
+    animation: none;
+  }
+}
+
+/* Animated SVG line draw (chart) */
+@keyframes brag-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.brag-line {
+  stroke-dasharray: 1;
+  animation: brag-draw 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes brag-area-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.brag-area {
+  opacity: 0;
+  animation: brag-area-in 0.8s ease 0.3s forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .brag-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .brag-area {
+    animation: none;
+    opacity: 1;
+  }
 }

@@ -156,10 +156,9 @@ async function onClearAll(): Promise<void> {
     <AppPageHeader
       title="Settings"
       description="Your data lives only in this browser. Back it up and export brag docs here."
-      icon="i-lucide-settings"
     />
 
-    <UCard :ui="{ body: 'space-y-4' }">
+    <section class="surface space-y-4 p-5 sm:p-6">
       <div>
         <h3 class="font-semibold text-[var(--ui-text-highlighted)]">
           Backup &amp; restore
@@ -192,9 +191,9 @@ async function onClearAll(): Promise<void> {
           @change="onImportFile"
         />
       </div>
-    </UCard>
+    </section>
 
-    <UCard :ui="{ body: 'space-y-4' }">
+    <section class="surface space-y-4 p-5 sm:p-6">
       <div>
         <h3 class="font-semibold text-[var(--ui-text-highlighted)]">
           Markdown brag export
@@ -233,9 +232,9 @@ async function onClearAll(): Promise<void> {
         readonly
         class="w-full font-mono text-xs"
       />
-    </UCard>
+    </section>
 
-    <UCard :ui="{ body: 'space-y-4' }">
+    <section class="surface space-y-4 p-5 sm:p-6">
       <div>
         <h3 class="font-semibold text-[var(--ui-text-highlighted)]">Data</h3>
         <p class="mt-1 text-sm text-[var(--ui-text-muted)]">
@@ -265,6 +264,6 @@ async function onClearAll(): Promise<void> {
           @click="onClearAll"
         />
       </div>
-    </UCard>
+    </section>
   </div>
 </template>

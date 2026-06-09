@@ -28,7 +28,7 @@ const stats = computed(() => [
   {
     label: "Mentees",
     value: activePeople.value.length,
-    icon: "i-lucide-users",
+    icon: "i-lucide-users-round",
     to: "/mentoring",
   },
   {
@@ -39,13 +39,13 @@ const stats = computed(() => [
   },
 ]);
 
-const recentAchievements = computed(() => achievements.value.slice(0, 4));
+const recentAchievements = computed(() => achievements.value.slice(0, 5));
 const topGoals = computed(() =>
   (activeGoals.value.length ? activeGoals.value : goals.value).slice(0, 4)
 );
 const recentEnablement = computed(() => enablement.value.slice(0, 4));
 
-const chartData = computed(() => reflections.value.slice(-10));
+const chartData = computed(() => reflections.value.slice(-12));
 const latest = computed(
   () => reflections.value[reflections.value.length - 1] ?? null
 );
@@ -57,164 +57,210 @@ const signalColor = computed(
       | "warning"
       | "error"
 );
+
+const energyRows = computed(() =>
+  latest.value
+    ? [
+        { label: "Energy", value: latest.value.energy },
+        { label: "Workload", value: latest.value.workload },
+        { label: "Satisfaction", value: latest.value.satisfaction },
+      ]
+    : []
+);
 </script>
 
 <template>
-  <div class="space-y-6">
-    <AppPageHeader
-      title="Dashboard"
-      description="A quick read on your wins, goals, and energy."
-      icon="i-lucide-layout-dashboard"
-    />
+  <div class="space-y-10">
+    <!-- Hero -->
+    <FadeIn>
+      <div>
+        <p class="text-sm text-[var(--ui-text-dimmed)]">{{ longDate() }}</p>
+        <h1
+          class="mt-1 text-3xl font-semibold tracking-tight text-[var(--ui-text-highlighted)]"
+        >
+          {{ greeting() }}.
+        </h1>
+        <p class="mt-1.5 text-[var(--ui-text-muted)]">
+          Here's your record at a glance — and a nudge on your energy.
+        </p>
+      </div>
+    </FadeIn>
 
-    <!-- Stat tiles -->
-    <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <ULink
-        v-for="stat in stats"
-        :key="stat.label"
-        :to="stat.to"
-        class="hover:border-primary/40 rounded-xl border border-[var(--ui-border)] p-4 transition"
+    <!-- Stat strip (hairline-separated, no boxes) -->
+    <FadeIn :delay="0.05">
+      <div
+        class="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-[var(--ui-border)]/60 ring-1 ring-[var(--ui-border)]/60 sm:grid-cols-4"
       >
-        <div class="flex items-center gap-2 text-[var(--ui-text-dimmed)]">
-          <UIcon :name="stat.icon" class="size-4" />
-          <span class="text-xs">{{ stat.label }}</span>
-        </div>
-        <p
-          class="mt-1 text-2xl font-semibold text-[var(--ui-text-highlighted)]"
+        <ULink
+          v-for="stat in stats"
+          :key="stat.label"
+          :to="stat.to"
+          class="group bg-[var(--ui-bg)] p-5 transition-colors hover:bg-[var(--ui-bg-muted)]/40"
         >
-          {{ stat.value }}
-        </p>
-      </ULink>
-    </div>
-
-    <div class="grid gap-5 lg:grid-cols-2">
-      <!-- Recent achievements -->
-      <UCard :ui="{ body: 'space-y-3' }">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold text-[var(--ui-text-highlighted)]">
-            Recent wins
-          </h3>
-          <UButton
-            label="All"
-            to="/achievements"
-            color="neutral"
-            variant="link"
-            size="xs"
-            trailing-icon="i-lucide-arrow-right"
-          />
-        </div>
-        <p
-          v-if="!recentAchievements.length"
-          class="py-6 text-center text-sm text-[var(--ui-text-dimmed)]"
-        >
-          No achievements yet.
-        </p>
-        <ul v-else class="space-y-2">
-          <li
-            v-for="achievement in recentAchievements"
-            :key="achievement.id"
-            class="flex items-baseline justify-between gap-3"
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--ui-text-muted)]">
+              {{ stat.label }}
+            </span>
+            <UIcon
+              :name="stat.icon"
+              class="group-hover:text-primary size-4 text-[var(--ui-text-dimmed)] transition-colors"
+            />
+          </div>
+          <p
+            class="mt-2 text-3xl font-semibold tracking-tight text-[var(--ui-text-highlighted)]"
           >
-            <span class="truncate text-sm text-[var(--ui-text)]">
-              {{ achievement.title }}
-            </span>
-            <span class="shrink-0 text-xs text-[var(--ui-text-dimmed)]">
-              {{ formatDate(achievement.occurredAt) }}
-            </span>
-          </li>
-        </ul>
-      </UCard>
+            {{ stat.value }}
+          </p>
+        </ULink>
+      </div>
+    </FadeIn>
 
-      <!-- Active goals -->
-      <UCard :ui="{ body: 'space-y-3' }">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold text-[var(--ui-text-highlighted)]">Goals</h3>
-          <UButton
-            label="All"
-            to="/goals"
-            color="neutral"
-            variant="link"
-            size="xs"
-            trailing-icon="i-lucide-arrow-right"
-          />
-        </div>
-        <p
-          v-if="!topGoals.length"
-          class="py-6 text-center text-sm text-[var(--ui-text-dimmed)]"
-        >
-          No goals yet.
-        </p>
-        <ul v-else class="space-y-3">
-          <li v-for="goal in topGoals" :key="goal.id">
-            <div class="mb-1 flex items-center justify-between gap-3 text-sm">
-              <span class="truncate text-[var(--ui-text)]">{{
-                goal.title
-              }}</span>
-              <span class="shrink-0 text-xs text-[var(--ui-text-dimmed)]">
-                {{ goal.progress }}%
-              </span>
-            </div>
-            <UProgress :model-value="goal.progress" :max="100" size="sm" />
-          </li>
-        </ul>
-      </UCard>
-
-      <!-- Energy -->
-      <UCard :ui="{ body: 'space-y-3' }">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold text-[var(--ui-text-highlighted)]">
-            Energy
-          </h3>
+    <!-- Energy band -->
+    <FadeIn :delay="0.1">
+      <section class="surface surface-hover p-5 sm:p-6">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <h2 class="font-semibold text-[var(--ui-text-highlighted)]">
+              Energy
+            </h2>
+            <AppPopover
+              mode="hover"
+              :title="signal.title"
+              icon="i-lucide-activity"
+              side="bottom"
+              align="start"
+            >
+              <template #trigger>
+                <UBadge
+                  :color="signalColor"
+                  variant="soft"
+                  class="cursor-default"
+                >
+                  {{ signal.title }}
+                </UBadge>
+              </template>
+              <p class="text-sm text-[var(--ui-text-muted)]">
+                {{ signal.message }}
+              </p>
+              <div v-if="energyRows.length" class="mt-3 space-y-1.5">
+                <div
+                  v-for="row in energyRows"
+                  :key="row.label"
+                  class="flex items-center gap-2"
+                >
+                  <span class="w-20 text-xs text-[var(--ui-text-dimmed)]">
+                    {{ row.label }}
+                  </span>
+                  <div class="flex gap-1">
+                    <span
+                      v-for="n in 5"
+                      :key="n"
+                      class="size-1.5 rounded-full"
+                      :class="
+                        n <= row.value ? 'bg-primary' : 'bg-[var(--ui-border)]'
+                      "
+                    />
+                  </div>
+                </div>
+              </div>
+            </AppPopover>
+          </div>
           <UButton
             label="Check in"
             to="/energy"
             color="neutral"
-            variant="link"
+            variant="ghost"
             size="xs"
             trailing-icon="i-lucide-arrow-right"
           />
         </div>
-        <UBadge :color="signalColor" variant="soft">{{ signal.title }}</UBadge>
         <EnergyTrendChart v-if="chartData.length" :reflections="chartData" />
-        <p v-else class="py-6 text-center text-sm text-[var(--ui-text-dimmed)]">
-          No weekly reflections yet.
-        </p>
-        <p v-if="latest" class="text-xs text-[var(--ui-text-dimmed)]">
-          Last check-in: week of {{ formatWeekLabel(latest.weekStart) }}
-        </p>
-      </UCard>
-
-      <!-- Enablement -->
-      <UCard :ui="{ body: 'space-y-3' }">
-        <div class="flex items-center justify-between">
-          <h3 class="font-semibold text-[var(--ui-text-highlighted)]">
-            Enablement
-          </h3>
-          <UButton
-            label="All"
-            to="/enablement"
-            color="neutral"
-            variant="link"
-            size="xs"
-            trailing-icon="i-lucide-arrow-right"
-          />
+        <div
+          v-else
+          class="flex flex-col items-center py-8 text-center text-sm text-[var(--ui-text-dimmed)]"
+        >
+          <UIcon name="i-lucide-activity" class="mb-2 size-6 opacity-60" />
+          No weekly reflections yet — start with this week.
         </div>
+      </section>
+    </FadeIn>
+
+    <!-- Wins + Goals -->
+    <div class="grid gap-x-10 gap-y-10 lg:grid-cols-2">
+      <FadeIn :delay="0.15">
+        <section>
+          <DashboardSectionHeader title="Recent wins" to="/achievements" />
+          <p
+            v-if="!recentAchievements.length"
+            class="text-sm text-[var(--ui-text-dimmed)]"
+          >
+            No achievements yet.
+          </p>
+          <ul v-else class="divide-hair -mx-2">
+            <li
+              v-for="achievement in recentAchievements"
+              :key="achievement.id"
+              class="flex items-baseline justify-between gap-3 rounded-lg px-2 py-2.5"
+            >
+              <span class="truncate text-sm text-[var(--ui-text)]">
+                {{ achievement.title }}
+              </span>
+              <span class="shrink-0 text-xs text-[var(--ui-text-dimmed)]">
+                {{ formatDate(achievement.occurredAt) }}
+              </span>
+            </li>
+          </ul>
+        </section>
+      </FadeIn>
+
+      <FadeIn :delay="0.2">
+        <section>
+          <DashboardSectionHeader title="Goals" to="/goals" />
+          <p
+            v-if="!topGoals.length"
+            class="text-sm text-[var(--ui-text-dimmed)]"
+          >
+            No goals yet.
+          </p>
+          <ul v-else class="space-y-4">
+            <li v-for="goal in topGoals" :key="goal.id">
+              <div
+                class="mb-1.5 flex items-center justify-between gap-3 text-sm"
+              >
+                <span class="truncate text-[var(--ui-text)]">
+                  {{ goal.title }}
+                </span>
+                <span class="shrink-0 text-xs text-[var(--ui-text-dimmed)]">
+                  {{ goal.progress }}%
+                </span>
+              </div>
+              <UProgress :model-value="goal.progress" :max="100" size="sm" />
+            </li>
+          </ul>
+        </section>
+      </FadeIn>
+    </div>
+
+    <!-- Enablement -->
+    <FadeIn :delay="0.25">
+      <section>
+        <DashboardSectionHeader title="Enablement" to="/enablement" />
         <p
           v-if="!recentEnablement.length"
-          class="py-6 text-center text-sm text-[var(--ui-text-dimmed)]"
+          class="text-sm text-[var(--ui-text-dimmed)]"
         >
           Nothing logged yet.
         </p>
-        <ul v-else class="space-y-2">
+        <ul v-else class="divide-hair -mx-2">
           <li
             v-for="item in recentEnablement"
             :key="item.id"
-            class="flex items-center justify-between gap-3"
+            class="flex items-center justify-between gap-3 rounded-lg px-2 py-2.5"
           >
-            <span class="inline-flex min-w-0 items-center gap-2">
+            <span class="inline-flex min-w-0 items-center gap-2.5">
               <UIcon
                 :name="enablementTypeMeta[item.type].icon"
-                class="text-secondary size-4 shrink-0"
+                class="size-4 shrink-0 text-[var(--ui-text-dimmed)]"
               />
               <span class="truncate text-sm text-[var(--ui-text)]">
                 {{ item.title }}
@@ -225,7 +271,7 @@ const signalColor = computed(
             </span>
           </li>
         </ul>
-      </UCard>
-    </div>
+      </section>
+    </FadeIn>
   </div>
 </template>

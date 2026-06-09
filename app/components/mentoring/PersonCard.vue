@@ -50,7 +50,7 @@ async function onDeleteSession(id: string): Promise<void> {
 </script>
 
 <template>
-  <UCard :ui="{ body: 'space-y-3' }">
+  <article class="surface surface-hover h-full space-y-3 p-5">
     <div class="flex items-start justify-between gap-3">
       <div class="min-w-0">
         <div class="flex items-center gap-2">
@@ -170,5 +170,5 @@ async function onDeleteSession(id: string): Promise<void> {
       :person-name="person.name"
       @saved="onLogged"
     />
-  </UCard>
+  </article>
 </template>
