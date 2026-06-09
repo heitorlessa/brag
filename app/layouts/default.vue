@@ -54,15 +54,18 @@ watch(
       </header>
 
       <main class="min-h-0 flex-1 overflow-y-auto">
-        <Motion
-          :key="route.path"
-          :initial="{ opacity: 0, y: 8 }"
-          :animate="{ opacity: 1, y: 0 }"
-          :transition="{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }"
-          class="mx-auto w-full max-w-6xl px-4 pt-2 pb-16 sm:px-8"
-        >
-          <slot />
-        </Motion>
+        <div class="flex min-h-full flex-col">
+          <Motion
+            :key="route.path"
+            :initial="{ opacity: 0, y: 8 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }"
+            class="mx-auto w-full max-w-6xl flex-1 px-4 pt-2 pb-10 sm:px-8"
+          >
+            <slot />
+          </Motion>
+          <AppFooter v-if="route.path !== '/report'" />
+        </div>
       </main>
     </div>
 

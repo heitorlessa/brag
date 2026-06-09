@@ -75,7 +75,7 @@ body {
     --ui-text-highlighted: var(--ui-color-neutral-950);
 
     /* Subtle elevation: a hair-lighter top edge + soft layered shadow. */
-    --surface-top: color-mix(in oklab, var(--ui-bg) 90%, white);
+    --surface-top: color-mix(in oklab, var(--ui-bg) 97%, white);
     --surface-shadow:
       0 1px 2px -1px rgb(15 23 42 / 0.06),
       0 14px 36px -22px rgb(15 23 42 / 0.22);
@@ -90,7 +90,7 @@ body {
   }
 
   .dark {
-    --surface-top: color-mix(in oklab, var(--ui-bg) 88%, white);
+    --surface-top: color-mix(in oklab, var(--ui-bg) 94%, white);
     --surface-shadow:
       0 1px 2px -1px rgb(0 0 0 / 0.5), 0 18px 44px -26px rgb(0 0 0 / 0.7);
     --surface-shadow-hover:
