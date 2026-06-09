@@ -8,13 +8,18 @@ import {
 import { listAchievements } from "~/services/achievements";
 import { listEnablement } from "~/services/enablement";
 import { listAllSessions, listPeople } from "~/services/mentoring";
-import { seedSampleData } from "~/services/seed";
+import { SAMPLE_PREF, seedSampleData } from "~/services/seed";
 import { isOpfsAvailable } from "~/local-db";
+import { useStorage } from "@vueuse/core";
 
 definePageMeta({ title: "Settings" });
 
 const toast = useToast();
 const busy = ref(false);
+
+// Sample-data preference. Turning it off clears the database so the app can be
+// used for real, and stops auto-seed from ever bringing demo data back.
+const sampleEnabled = useStorage(SAMPLE_PREF, true);
 
 // ── JSON backup ────────────────────────────────────────────────────────────
 async function onExportJson(): Promise<void> {
@@ -150,13 +155,56 @@ async function onClearAll(): Promise<void> {
   }
 }
 
+async function onToggleSample(value: boolean): Promise<void> {
+  busy.value = true;
+  try {
+    if (value) {
+      sampleEnabled.value = true;
+      await seedSampleData();
+      toast.add({ title: "Sample data loaded — reloading…", color: "success" });
+      window.location.reload();
+    } else {
+      if (
+        !window.confirm(
+          "Turn off sample data? This clears the database so you can start fresh."
+        )
+      ) {
+        return; // model-value stays true; switch reverts
+      }
+      sampleEnabled.value = false;
+      await importAll(EMPTY_BACKUP);
+      toast.add({ title: "Cleared — ready for your data", color: "neutral" });
+      window.location.reload();
+    }
+  } finally {
+    busy.value = false;
+  }
+}
+
 // ── Secondary navigation (Claude-style left menu) ───────────────────────────
 const sections = [
   { id: "backup", label: "Backup & restore", icon: "i-lucide-database-backup" },
   { id: "export", label: "Brag export", icon: "i-lucide-file-text" },
   { id: "data", label: "Sample data", icon: "i-lucide-sparkles" },
+  { id: "agents", label: "Agent API", icon: "i-lucide-terminal" },
   { id: "about", label: "About", icon: "i-lucide-info" },
 ] as const;
+
+const agentExample = `// In the browser console or a browser-driving agent:
+await brag.addAchievement({
+  title: "Shipped the new onboarding flow",
+  occurredAt: "2026-06-01",
+  impact: "Cut time-to-first-action by 40%",
+  tags: ["launch"],
+});
+
+// Batch ingest (appends, doesn't replace):
+await brag.importMerge({
+  goals: [{ title: "Grow as a leader", year: 2026, progress: 30 }],
+  achievements: [{ title: "Led the migration", occurredAt: "2026-05-10" }],
+});
+
+brag.help(); // full reference`;
 
 type SectionId = (typeof sections)[number]["id"];
 const active = ref<SectionId>("backup");
@@ -290,20 +338,44 @@ const active = ref<SectionId>("backup");
               Sample data
             </h2>
             <p class="mt-1 text-sm text-[var(--ui-text-muted)]">
-              Load a rich example dataset to explore the app, or wipe everything
-              and start fresh.
+              Explore with a realistic example dataset, or turn it off to start
+              fresh and use Brag for real.
             </p>
           </div>
-          <div class="flex flex-wrap gap-2.5">
-            <UButton
-              icon="i-lucide-sparkles"
-              label="Load sample data"
-              color="neutral"
-              variant="outline"
+
+          <div
+            class="surface flex items-center justify-between gap-4 p-4 sm:px-5"
+          >
+            <div>
+              <p class="text-sm font-medium text-[var(--ui-text)]">
+                Use sample data
+              </p>
+              <p class="mt-0.5 text-sm text-[var(--ui-text-muted)]">
+                {{
+                  sampleEnabled
+                    ? "Demo entries are loaded."
+                    : "Off — your data only."
+                }}
+              </p>
+            </div>
+            <USwitch
+              :model-value="sampleEnabled"
               :disabled="busy"
-              @click="onSeed"
+              @update:model-value="onToggleSample"
             />
           </div>
+
+          <UButton
+            v-if="sampleEnabled"
+            icon="i-lucide-refresh-cw"
+            label="Reload sample data"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            :disabled="busy"
+            @click="onSeed"
+          />
+
           <div class="bg-error/5 ring-error/20 mt-2 rounded-xl p-4 ring-1">
             <p class="text-sm font-medium text-[var(--ui-text-highlighted)]">
               Danger zone
@@ -321,6 +393,31 @@ const active = ref<SectionId>("backup");
               @click="onClearAll"
             />
           </div>
+        </section>
+
+        <!-- Agent API -->
+        <section v-show="active === 'agents'" class="max-w-2xl space-y-5">
+          <div>
+            <h2
+              class="text-lg font-semibold tracking-tight text-[var(--ui-text-highlighted)]"
+            >
+              Agent API
+            </h2>
+            <p class="mt-1 text-sm text-[var(--ui-text-muted)]">
+              Brag is local-first — your data lives in this browser, so there's
+              no server to POST to. To let an agent add data, drive this page
+              (Playwright, a browser extension, or the devtools console) and
+              call the <code class="text-primary">window.brag</code> API.
+            </p>
+          </div>
+          <pre
+            class="surface overflow-x-auto p-4 font-mono text-xs leading-relaxed text-[var(--ui-text-toned)]"
+          ><code>{{ agentExample }}</code></pre>
+          <p class="text-sm text-[var(--ui-text-muted)]">
+            <code class="text-primary">importMerge</code> appends (it never
+            wipes existing data). For a full replace, use a JSON backup under
+            Backup &amp; restore.
+          </p>
         </section>
 
         <!-- About -->

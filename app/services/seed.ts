@@ -18,6 +18,7 @@ function daysAgo(n: number): string {
 }
 
 const SEED_FLAG = "brag:auto-seeded";
+export const SAMPLE_PREF = "brag:sample-enabled";
 
 export async function seedSampleData(): Promise<void> {
   // ── Goals ──────────────────────────────────────────────────────────────
@@ -308,6 +309,13 @@ export async function seedSampleData(): Promise<void> {
 export async function autoSeedIfEmpty(): Promise<void> {
   if (typeof localStorage === "undefined") return;
   if (localStorage.getItem(SEED_FLAG)) return;
+
+  // Respect the user's "Sample data" preference — if they turned it off to use
+  // the app for real, never auto-seed.
+  if (localStorage.getItem(SAMPLE_PREF) === "false") {
+    localStorage.setItem(SEED_FLAG, "1");
+    return;
+  }
 
   const db = await getDb();
   const existing = await db
