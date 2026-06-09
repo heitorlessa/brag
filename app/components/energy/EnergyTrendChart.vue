@@ -4,9 +4,11 @@ import type { EnergyReflection } from "~/local-db";
 /** Dependency-free SVG line chart of the three weekly series (scale 1–5). */
 const props = defineProps<{ reflections: EnergyReflection[] }>();
 
-const W = 640;
-const H = 240;
-const pad = { l: 28, r: 12, t: 12, b: 26 };
+// Wide aspect so the chart reads well at full container width without getting
+// too tall.
+const W = 1000;
+const H = 260;
+const pad = { l: 28, r: 12, t: 14, b: 26 };
 const innerW = W - pad.l - pad.r;
 const innerH = H - pad.t - pad.b;
 

@@ -118,7 +118,11 @@ function save(): void {
     </div>
 
     <div class="flex justify-end">
-      <UButton icon="i-lucide-check" label="Save reflection" @click="save" />
+      <UButton
+        icon="i-lucide-check"
+        :label="saved ? 'Update reflection' : 'Save reflection'"
+        @click="save"
+      />
     </div>
   </div>
 
@@ -177,7 +181,7 @@ function save(): void {
           <div class="mt-5 flex justify-end">
             <UButton
               icon="i-lucide-check"
-              label="Save reflection"
+              :label="saved ? 'Update reflection' : 'Save reflection'"
               @click="save"
             />
           </div>
@@ -186,9 +190,8 @@ function save(): void {
     </AnimatePresence>
 
     <!-- Footer nav -->
-    <div class="mt-6 flex items-center justify-between">
+    <div v-if="step > 0" class="mt-6">
       <UButton
-        v-if="step > 0"
         icon="i-lucide-arrow-left"
         label="Back"
         color="neutral"
@@ -196,10 +199,6 @@ function save(): void {
         size="sm"
         @click="back"
       />
-      <span v-else />
-      <span class="text-xs text-[var(--ui-text-dimmed)]">
-        {{ saved ? "Editing saved week" : "New check-in" }}
-      </span>
     </div>
   </div>
 </template>
