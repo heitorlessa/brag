@@ -107,7 +107,7 @@ function onSubmit(): void {
             />
           </UFormField>
           <UFormField label="Started" name="startedAt">
-            <UInput v-model="state.startedAt" type="date" />
+            <AppDatePicker v-model="state.startedAt" placeholder="Optional" />
           </UFormField>
           <UFormField label="Active" name="active">
             <USwitch v-model="state.active" />

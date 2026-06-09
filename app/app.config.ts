@@ -5,6 +5,20 @@ export default defineAppConfig({
       secondary: "green",
       neutral: "slate",
     },
+    // Lighter, roomier buttons — more horizontal breathing room and a softer
+    // radius. Icon-only (square) buttons keep their own compact padding.
+    button: {
+      slots: { base: "font-medium rounded-lg" },
+      variants: {
+        size: {
+          xs: { base: "px-2 py-1" },
+          sm: { base: "px-3 py-1.5" },
+          md: { base: "px-4 py-2" },
+          lg: { base: "px-5 py-2.5" },
+          xl: { base: "px-6 py-3" },
+        },
+      },
+    },
     // Airier cards: softer corners, more breathing room.
     card: {
       slots: {

@@ -20,8 +20,9 @@ const props = withDefaults(
   defineProps<{
     modelValue?: string;
     placeholder?: string;
+    minHeight?: string;
   }>(),
-  { modelValue: "", placeholder: "Write in Markdown…" }
+  { modelValue: "", placeholder: "Write in Markdown…", minHeight: "min-h-24" }
 );
 
 const emit = defineEmits<{ "update:modelValue": [string] }>();
@@ -39,7 +40,9 @@ const editor = useEditor({
     }),
   ],
   editorProps: {
-    attributes: { class: "brag-prose min-h-24 px-3 py-2 focus:outline-none" },
+    attributes: {
+      class: `brag-prose ${props.minHeight} px-3 py-2 focus:outline-none`,
+    },
   },
   onUpdate: ({ editor: instance }) => {
     emit("update:modelValue", readMarkdown(instance));

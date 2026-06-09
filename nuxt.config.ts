@@ -25,19 +25,10 @@ export default defineNuxtConfig({
   // default would prefix it to <AchievementsAchievementCard>).
   components: [{ path: "~/components", pathPrefix: false }],
 
-  // SQLocal's OPFS sync access (SQLite WASM) requires the page to be
-  // cross-origin isolated in production. The SQLocal Vite plugin sets these in
-  // dev; these route rules ensure the deployed (e.g. Vercel) build does too.
-  nitro: {
-    routeRules: {
-      "/**": {
-        headers: {
-          "Cross-Origin-Opener-Policy": "same-origin",
-          "Cross-Origin-Embedder-Policy": "require-corp",
-        },
-      },
-    },
-  },
+  // NOTE: do NOT set cross-origin isolation (COOP/COEP require-corp) headers.
+  // SQLocal uses the OPFS sync-access-handle pool VFS, which works WITHOUT
+  // cross-origin isolation. Forcing `require-corp` blocks subresources on
+  // hosts like Vercel and leaves the database stuck initializing.
 
   colorMode: {
     preference: "system",

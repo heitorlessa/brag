@@ -1,41 +1,33 @@
 <script setup lang="ts">
+import { useStorage } from "@vueuse/core";
+
 definePageMeta({ title: "Energy" });
 
 const { reflections, isLoading, save, remove } = useEnergy();
 const toast = useToast();
 
+// Remembered preference: progressive check-in (default) vs quick single-screen.
+const quick = useStorage("brag:energy-quick", false);
+
 const selectedWeek = ref(currentWeekStart());
-const weekModel = computed({
-  get: () => selectedWeek.value,
-  set: (value: string) => {
-    if (value) selectedWeek.value = isoWeekStart(value);
-  },
-});
-
-const form = reactive({ energy: 3, workload: 3, satisfaction: 3, note: "" });
-
 const existing = computed(
   () =>
     reflections.value.find((r) => r.weekStart === selectedWeek.value) ?? null
 );
+const isCurrentWeek = computed(() => selectedWeek.value === currentWeekStart());
 
-function prefill(): void {
-  form.energy = existing.value?.energy ?? 3;
-  form.workload = existing.value?.workload ?? 3;
-  form.satisfaction = existing.value?.satisfaction ?? 3;
-  form.note = existing.value?.note ?? "";
+function shiftWeek(by: number): void {
+  const next = addWeeks(selectedWeek.value, by);
+  if (next <= currentWeekStart()) selectedWeek.value = next;
 }
 
-watch([selectedWeek, existing], prefill, { immediate: true });
-
-async function onSave(): Promise<void> {
-  await save({
-    weekStart: selectedWeek.value,
-    energy: form.energy,
-    workload: form.workload,
-    satisfaction: form.satisfaction,
-    note: form.note,
-  });
+async function onSave(payload: {
+  energy: number;
+  workload: number;
+  satisfaction: number;
+  note: string;
+}): Promise<void> {
+  await save({ weekStart: selectedWeek.value, ...payload });
   toast.add({ title: "Reflection saved", color: "success" });
 }
 
@@ -52,7 +44,6 @@ function editWeek(weekStart: string): void {
 const chartData = computed(() => reflections.value.slice(-16));
 const recent = computed(() => reflections.value.toReversed());
 const signal = computed(() => analyzeEnergy(reflections.value));
-
 const signalColor = computed(
   () =>
     ({ ok: "success", watch: "warning", alert: "error" })[signal.value.level] as
@@ -68,16 +59,6 @@ const signalIcon = computed(
       alert: "i-lucide-battery-warning",
     })[signal.value.level]
 );
-
-const sliders = [
-  { key: "energy" as const, label: "Energy", hint: "1 drained · 5 energized" },
-  { key: "workload" as const, label: "Workload", hint: "1 light · 5 crushing" },
-  {
-    key: "satisfaction" as const,
-    label: "Satisfaction",
-    hint: "1 low · 5 high",
-  },
-];
 </script>
 
 <template>
@@ -96,51 +77,62 @@ const sliders = [
       class="mb-6"
     />
 
-    <div class="grid gap-5 lg:grid-cols-2">
-      <!-- Weekly reflection form -->
-      <section class="surface space-y-4 p-5 sm:p-6">
-        <div class="flex items-center justify-between gap-3">
-          <h3 class="font-semibold text-[var(--ui-text-highlighted)]">
-            Reflection
-          </h3>
-          <UInput v-model="weekModel" type="date" size="sm" />
-        </div>
-        <p class="-mt-2 text-xs text-[var(--ui-text-dimmed)]">
-          Week of {{ formatWeekLabel(selectedWeek) }}
-          <span v-if="existing" class="text-primary">· saved</span>
-        </p>
-
-        <div v-for="slider in sliders" :key="slider.key">
-          <div class="mb-1 flex items-center justify-between text-sm">
-            <span class="text-[var(--ui-text)]">{{ slider.label }}</span>
-            <span class="font-semibold text-[var(--ui-text-highlighted)]">
-              {{ form[slider.key] }}/5
-            </span>
+    <div class="grid gap-5 lg:grid-cols-5">
+      <!-- Check-in -->
+      <section class="surface p-5 sm:p-6 lg:col-span-3">
+        <div class="mb-5 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-1">
+            <UButton
+              icon="i-lucide-chevron-left"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              aria-label="Previous week"
+              @click="shiftWeek(-1)"
+            />
+            <div class="min-w-0 text-center">
+              <p class="text-sm font-medium text-[var(--ui-text)]">
+                {{ formatWeekLabel(selectedWeek) }}
+              </p>
+              <p class="text-[11px] text-[var(--ui-text-dimmed)]">
+                {{
+                  existing ? "Saved" : isCurrentWeek ? "This week" : "No entry"
+                }}
+              </p>
+            </div>
+            <UButton
+              icon="i-lucide-chevron-right"
+              color="neutral"
+              variant="ghost"
+              size="xs"
+              :disabled="isCurrentWeek"
+              aria-label="Next week"
+              @click="shiftWeek(1)"
+            />
           </div>
-          <USlider v-model="form[slider.key]" :min="1" :max="5" :step="1" />
-          <p class="mt-1 text-xs text-[var(--ui-text-dimmed)]">
-            {{ slider.hint }}
-          </p>
+
+          <UTooltip text="Quick mode shows everything on one screen">
+            <label
+              class="flex cursor-pointer items-center gap-2 text-xs text-[var(--ui-text-muted)]"
+            >
+              Quick
+              <USwitch v-model="quick" size="sm" />
+            </label>
+          </UTooltip>
         </div>
 
-        <UFormField label="Note">
-          <RichTextEditor
-            v-model="form.note"
-            placeholder="What drained or recharged you this week…"
-          />
-        </UFormField>
-
-        <div class="flex justify-end">
-          <UButton
-            icon="i-lucide-save"
-            label="Save reflection"
-            @click="onSave"
-          />
-        </div>
+        <EnergyCheckIn
+          :key="selectedWeek"
+          :initial="existing"
+          :week-label="selectedWeek"
+          :saved="Boolean(existing)"
+          :quick="quick"
+          @save="onSave"
+        />
       </section>
 
       <!-- Trend -->
-      <section class="surface space-y-3 p-5 sm:p-6">
+      <section class="surface space-y-3 p-5 sm:p-6 lg:col-span-2">
         <h3 class="font-semibold text-[var(--ui-text-highlighted)]">Trend</h3>
         <EnergyTrendChart v-if="chartData.length" :reflections="chartData" />
         <p
@@ -154,7 +146,7 @@ const sliders = [
 
     <!-- History -->
     <h3
-      class="mt-7 mb-3 text-sm font-semibold tracking-wide text-[var(--ui-text-dimmed)] uppercase"
+      class="mt-8 mb-3 text-xs font-semibold tracking-wide text-[var(--ui-text-dimmed)] uppercase"
     >
       History
     </h3>

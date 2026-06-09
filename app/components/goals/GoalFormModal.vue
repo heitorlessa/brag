@@ -113,7 +113,7 @@ function onSubmit(): void {
             />
           </UFormField>
           <UFormField label="Target date" name="targetDate">
-            <UInput v-model="state.targetDate" type="date" />
+            <AppDatePicker v-model="state.targetDate" placeholder="Optional" />
           </UFormField>
         </div>
 

@@ -8,10 +8,6 @@ defineShortcuts({
   ctrl_k: () => togglePalette(),
 });
 
-const pageTitle = computed(
-  () => (route.meta.title as string | undefined) ?? "Brag"
-);
-
 const mobileNavOpen = ref(false);
 watch(
   () => route.path,
@@ -41,24 +37,20 @@ watch(
           @click="mobileNavOpen = true"
         />
 
-        <button
-          type="button"
-          class="group flex h-9 w-full max-w-sm items-center gap-2 rounded-xl bg-[var(--ui-bg-muted)]/60 px-3 text-sm text-[var(--ui-text-dimmed)] ring-1 ring-transparent transition hover:ring-[var(--ui-border)]"
-          @click="openPalette()"
-        >
-          <UIcon name="i-lucide-search" class="size-4" />
-          <span>Search or jump to…</span>
-          <span class="ms-auto hidden items-center gap-0.5 sm:flex">
-            <UKbd value="meta" />
-            <UKbd value="k" />
-          </span>
-        </button>
-
-        <span
-          class="ms-auto text-xs font-medium text-[var(--ui-text-dimmed)] sm:hidden"
-        >
-          {{ pageTitle }}
-        </span>
+        <div class="flex flex-1 justify-center">
+          <button
+            type="button"
+            class="group flex h-9 w-full max-w-md items-center gap-2 rounded-xl bg-[var(--ui-bg-muted)]/60 px-3.5 text-sm text-[var(--ui-text-dimmed)] ring-1 ring-transparent transition hover:bg-[var(--ui-bg-muted)] hover:ring-[var(--ui-border)]"
+            @click="openPalette()"
+          >
+            <UIcon name="i-lucide-search" class="size-4" />
+            <span>Search or jump to…</span>
+            <span class="ms-auto hidden items-center gap-0.5 sm:flex">
+              <UKbd value="meta" />
+              <UKbd value="k" />
+            </span>
+          </button>
+        </div>
       </header>
 
       <main class="min-h-0 flex-1 overflow-y-auto">

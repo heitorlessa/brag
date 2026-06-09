@@ -107,7 +107,7 @@ function onSubmit(): void {
             />
           </UFormField>
           <UFormField label="Date" name="occurredAt" required>
-            <UInput v-model="state.occurredAt" type="date" />
+            <AppDatePicker v-model="state.occurredAt" />
           </UFormField>
           <UFormField label="Category" name="category">
             <UInput

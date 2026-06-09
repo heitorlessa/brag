@@ -51,7 +51,7 @@ function onSubmit(): void {
       >
         <div class="grid gap-4 sm:grid-cols-2">
           <UFormField label="Date" name="date" required>
-            <UInput v-model="state.date" type="date" />
+            <AppDatePicker v-model="state.date" />
           </UFormField>
           <UFormField label="Topic" name="topic">
             <UInput v-model="state.topic" placeholder="e.g. Career planning" />

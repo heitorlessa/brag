@@ -149,121 +149,208 @@ async function onClearAll(): Promise<void> {
     busy.value = false;
   }
 }
+
+// ── Secondary navigation (Claude-style left menu) ───────────────────────────
+const sections = [
+  { id: "backup", label: "Backup & restore", icon: "i-lucide-database-backup" },
+  { id: "export", label: "Brag export", icon: "i-lucide-file-text" },
+  { id: "data", label: "Sample data", icon: "i-lucide-sparkles" },
+  { id: "about", label: "About", icon: "i-lucide-info" },
+] as const;
+
+type SectionId = (typeof sections)[number]["id"];
+const active = ref<SectionId>("backup");
 </script>
 
 <template>
-  <div class="space-y-6">
+  <div>
     <AppPageHeader
       title="Settings"
       description="Your data lives only in this browser. Back it up and export brag docs here."
     />
 
-    <section class="surface space-y-4 p-5 sm:p-6">
-      <div>
-        <h3 class="font-semibold text-[var(--ui-text-highlighted)]">
-          Backup &amp; restore
-        </h3>
-        <p class="mt-1 text-sm text-[var(--ui-text-muted)]">
-          Export the whole database to a JSON file, or restore from one.
-          Restoring replaces everything.
-        </p>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <UButton
-          icon="i-lucide-download"
-          label="Export JSON"
-          :loading="busy"
-          @click="onExportJson"
-        />
-        <UButton
-          icon="i-lucide-upload"
-          label="Import JSON"
-          color="neutral"
-          variant="soft"
-          :disabled="busy"
-          @click="fileInput?.click()"
-        />
-        <input
-          ref="fileInput"
-          type="file"
-          accept="application/json"
-          class="hidden"
-          @change="onImportFile"
-        />
-      </div>
-    </section>
+    <div class="flex flex-col gap-8 lg:flex-row">
+      <!-- Secondary nav -->
+      <nav class="shrink-0 lg:w-56">
+        <div class="flex gap-1 overflow-x-auto lg:sticky lg:top-2 lg:flex-col">
+          <button
+            v-for="s in sections"
+            :key="s.id"
+            type="button"
+            class="flex shrink-0 items-center gap-2.5 rounded-lg px-3 py-2 text-sm whitespace-nowrap transition-colors"
+            :class="
+              active === s.id
+                ? 'bg-[var(--ui-bg-muted)] font-medium text-[var(--ui-text-highlighted)]'
+                : 'text-[var(--ui-text-muted)] hover:bg-[var(--ui-bg-muted)]/50 hover:text-[var(--ui-text)]'
+            "
+            @click="active = s.id"
+          >
+            <UIcon :name="s.icon" class="size-4 shrink-0" />
+            {{ s.label }}
+          </button>
+        </div>
+      </nav>
 
-    <section class="surface space-y-4 p-5 sm:p-6">
-      <div>
-        <h3 class="font-semibold text-[var(--ui-text-highlighted)]">
-          Markdown brag export
-        </h3>
-        <p class="mt-1 text-sm text-[var(--ui-text-muted)]">
-          Generate a Markdown summary of achievements, enablement and mentoring
-          for a date range.
-        </p>
-      </div>
-      <div class="flex flex-wrap items-end gap-3">
-        <UFormField label="From">
-          <UInput v-model="from" type="date" />
-        </UFormField>
-        <UFormField label="To">
-          <UInput v-model="to" type="date" />
-        </UFormField>
-        <UButton
-          icon="i-lucide-eye"
-          label="Preview"
-          color="neutral"
-          variant="soft"
-          :loading="busy"
-          @click="onPreviewBragDoc"
-        />
-        <UButton
-          icon="i-lucide-download"
-          label="Download .md"
-          :loading="busy"
-          @click="onDownloadBragDoc"
-        />
-      </div>
-      <UTextarea
-        v-if="preview"
-        :model-value="preview"
-        :rows="14"
-        readonly
-        class="w-full font-mono text-xs"
-      />
-    </section>
+      <!-- Right content -->
+      <div class="min-w-0 flex-1">
+        <!-- Backup & restore -->
+        <section v-show="active === 'backup'" class="max-w-xl space-y-5">
+          <div>
+            <h2
+              class="text-lg font-semibold tracking-tight text-[var(--ui-text-highlighted)]"
+            >
+              Backup &amp; restore
+            </h2>
+            <p class="mt-1 text-sm text-[var(--ui-text-muted)]">
+              Export the whole database to a JSON file, or restore from one.
+              Restoring replaces everything.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2.5">
+            <UButton
+              icon="i-lucide-download"
+              label="Export JSON"
+              color="neutral"
+              variant="outline"
+              :loading="busy"
+              @click="onExportJson"
+            />
+            <UButton
+              icon="i-lucide-upload"
+              label="Import JSON"
+              color="neutral"
+              variant="outline"
+              :disabled="busy"
+              @click="fileInput?.click()"
+            />
+            <input
+              ref="fileInput"
+              type="file"
+              accept="application/json"
+              class="hidden"
+              @change="onImportFile"
+            />
+          </div>
+        </section>
 
-    <section class="surface space-y-4 p-5 sm:p-6">
-      <div>
-        <h3 class="font-semibold text-[var(--ui-text-highlighted)]">Data</h3>
-        <p class="mt-1 text-sm text-[var(--ui-text-muted)]">
-          Storage:
-          <span class="font-medium">
-            {{
-              isOpfsAvailable() ? "OPFS (persistent)" : "in-memory (ephemeral)"
-            }}
-          </span>
-        </p>
+        <!-- Brag export -->
+        <section v-show="active === 'export'" class="max-w-2xl space-y-5">
+          <div>
+            <h2
+              class="text-lg font-semibold tracking-tight text-[var(--ui-text-highlighted)]"
+            >
+              Brag export
+            </h2>
+            <p class="mt-1 text-sm text-[var(--ui-text-muted)]">
+              Generate a Markdown summary of achievements, enablement and
+              mentoring for a date range — ready for a review.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-end gap-3">
+            <UFormField label="From">
+              <AppDatePicker v-model="from" />
+            </UFormField>
+            <UFormField label="To">
+              <AppDatePicker v-model="to" />
+            </UFormField>
+            <div class="flex gap-2.5">
+              <UButton
+                icon="i-lucide-eye"
+                label="Preview"
+                color="neutral"
+                variant="ghost"
+                :loading="busy"
+                @click="onPreviewBragDoc"
+              />
+              <UButton
+                icon="i-lucide-download"
+                label="Download"
+                color="neutral"
+                variant="outline"
+                :loading="busy"
+                @click="onDownloadBragDoc"
+              />
+            </div>
+          </div>
+          <UTextarea
+            v-if="preview"
+            :model-value="preview"
+            :rows="16"
+            readonly
+            class="w-full font-mono text-xs"
+          />
+        </section>
+
+        <!-- Sample data -->
+        <section v-show="active === 'data'" class="max-w-xl space-y-5">
+          <div>
+            <h2
+              class="text-lg font-semibold tracking-tight text-[var(--ui-text-highlighted)]"
+            >
+              Sample data
+            </h2>
+            <p class="mt-1 text-sm text-[var(--ui-text-muted)]">
+              Load a rich example dataset to explore the app, or wipe everything
+              and start fresh.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2.5">
+            <UButton
+              icon="i-lucide-sparkles"
+              label="Load sample data"
+              color="neutral"
+              variant="outline"
+              :disabled="busy"
+              @click="onSeed"
+            />
+          </div>
+          <div class="bg-error/5 ring-error/20 mt-2 rounded-xl p-4 ring-1">
+            <p class="text-sm font-medium text-[var(--ui-text-highlighted)]">
+              Danger zone
+            </p>
+            <p class="mt-1 mb-3 text-sm text-[var(--ui-text-muted)]">
+              Permanently delete all achievements, goals, mentoring, enablement
+              and energy data.
+            </p>
+            <UButton
+              icon="i-lucide-trash-2"
+              label="Clear all data"
+              color="error"
+              variant="soft"
+              :disabled="busy"
+              @click="onClearAll"
+            />
+          </div>
+        </section>
+
+        <!-- About -->
+        <section v-show="active === 'about'" class="max-w-xl space-y-4">
+          <h2
+            class="text-lg font-semibold tracking-tight text-[var(--ui-text-highlighted)]"
+          >
+            About
+          </h2>
+          <dl class="divide-hair surface overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3">
+              <dt class="text-sm text-[var(--ui-text-muted)]">Storage</dt>
+              <dd class="text-sm font-medium text-[var(--ui-text)]">
+                {{ isOpfsAvailable() ? "OPFS (persistent)" : "In-memory" }}
+              </dd>
+            </div>
+            <div class="flex items-center justify-between px-4 py-3">
+              <dt class="text-sm text-[var(--ui-text-muted)]">Sync</dt>
+              <dd class="text-sm font-medium text-[var(--ui-text)]">
+                None — fully local
+              </dd>
+            </div>
+          </dl>
+          <p class="text-sm text-[var(--ui-text-muted)]">
+            Brag is local-first and privacy-first: your data never leaves this
+            browser. Export a JSON backup regularly, since clearing browser
+            storage will erase it.
+          </p>
+        </section>
       </div>
-      <div class="flex flex-wrap gap-2">
-        <UButton
-          icon="i-lucide-sparkles"
-          label="Load sample data"
-          color="neutral"
-          variant="soft"
-          :disabled="busy"
-          @click="onSeed"
-        />
-        <UButton
-          icon="i-lucide-trash-2"
-          label="Clear all data"
-          color="error"
-          variant="soft"
-          :disabled="busy"
-          @click="onClearAll"
-        />
-      </div>
-    </section>
+    </div>
   </div>
 </template>
