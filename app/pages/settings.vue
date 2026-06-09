@@ -20,7 +20,11 @@ const busy = ref(false);
 // Whether the demo dataset is currently loaded (checked on mount + after edits).
 const demoPresent = ref(false);
 onMounted(async () => {
-  demoPresent.value = await hasDemoData();
+  try {
+    demoPresent.value = await hasDemoData();
+  } catch {
+    demoPresent.value = false; // DB not ready; treat as no demo data
+  }
 });
 
 // ── JSON backup ────────────────────────────────────────────────────────────
@@ -172,12 +176,24 @@ async function onDownloadBragDoc(): Promise<void> {
 }
 
 // ── Demo / clear data ──────────────────────────────────────────────────────
+function onDbError(error: unknown): void {
+  console.error(error);
+  toast.add({
+    title: "Storage isn't ready",
+    description:
+      "The database couldn't be reached — reload the page and try again.",
+    color: "error",
+  });
+}
+
 async function onLoadDemo(): Promise<void> {
   busy.value = true;
   try {
     await seedDemoData();
     toast.add({ title: "Demo data loaded — reloading…", color: "success" });
     window.location.reload();
+  } catch (error) {
+    onDbError(error);
   } finally {
     busy.value = false;
   }
@@ -192,6 +208,8 @@ async function onRemoveDemo(): Promise<void> {
     await removeDemoData();
     toast.add({ title: "Demo data removed — reloading…", color: "neutral" });
     window.location.reload();
+  } catch (error) {
+    onDbError(error);
   } finally {
     busy.value = false;
   }
@@ -407,37 +425,36 @@ const active = ref<SectionId>("backup");
           </div>
 
           <div
-            class="surface flex items-center justify-between gap-4 p-4 sm:px-5"
+            class="surface flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5"
           >
             <div>
               <p class="text-sm font-medium text-[var(--ui-text)]">
-                {{ demoPresent ? "Demo data is loaded" : "No demo data" }}
-              </p>
-              <p class="mt-0.5 text-sm text-[var(--ui-text-muted)]">
                 {{
-                  demoPresent
-                    ? "Example entries are mixed in with yours, if any."
-                    : "Load it to take a quick tour."
+                  demoPresent ? "Demo data is loaded" : "No demo data detected"
                 }}
               </p>
+              <p class="mt-0.5 text-sm text-[var(--ui-text-muted)]">
+                Load it to take a tour; remove it anytime — your own entries
+                stay.
+              </p>
             </div>
-            <UButton
-              v-if="demoPresent"
-              icon="i-lucide-trash-2"
-              label="Remove demo data"
-              color="neutral"
-              variant="outline"
-              :disabled="busy"
-              @click="onRemoveDemo"
-            />
-            <UButton
-              v-else
-              icon="i-lucide-sparkles"
-              label="Load demo data"
-              color="primary"
-              :loading="busy"
-              @click="onLoadDemo"
-            />
+            <div class="flex shrink-0 gap-2.5">
+              <UButton
+                icon="i-lucide-sparkles"
+                label="Load demo data"
+                color="primary"
+                :loading="busy"
+                @click="onLoadDemo"
+              />
+              <UButton
+                icon="i-lucide-trash-2"
+                label="Remove"
+                color="neutral"
+                variant="outline"
+                :disabled="busy"
+                @click="onRemoveDemo"
+              />
+            </div>
           </div>
 
           <div class="bg-error/5 ring-error/20 mt-2 rounded-xl p-4 ring-1">

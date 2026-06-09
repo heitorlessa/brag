@@ -34,10 +34,44 @@ function initClient(): void {
   db = drizzle(client.driver, client.batchDriver, { schema });
 }
 
+/**
+ * Reject after `ms` so a blocked storage worker (e.g. a stale tab loaded before
+ * the cross-origin headers were fixed) surfaces an error instead of hanging
+ * forever — callers can show "reload" guidance rather than spinning.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(
+        new Error(
+          "Database initialization timed out — the storage worker may be blocked. Reload the page."
+        )
+      );
+    }, ms);
+    promise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
+
 async function ensureReady(): Promise<void> {
   initClient();
-  readyPromise ??= runMigrations(client as SQLocalDrizzle);
-  await readyPromise;
+  readyPromise ??= withTimeout(runMigrations(client as SQLocalDrizzle), 15000);
+  try {
+    await readyPromise;
+  } catch (error) {
+    // Allow a later call (e.g. after a reload) to retry instead of caching the
+    // failure forever.
+    readyPromise = null;
+    throw error;
+  }
 }
 
 /** Get the migrated, ready-to-query Drizzle instance. */
