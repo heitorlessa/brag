@@ -1,0 +1,63 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "import", "vue", "oxc"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "rules": {
+    "complexity": ["warn", { "max": 20 }],
+    "typescript/no-explicit-any": "error",
+    "typescript/explicit-function-return-type": "off",
+    "typescript/explicit-module-boundary-types": "off",
+    "import/no-default-export": "off",
+    "unicorn/no-null": "off",
+    "unicorn/no-empty-file": "off",
+    "unicorn/filename-case": "off",
+    "no-case-declarations": "off",
+    "no-await-in-loop": "off",
+    "typescript/prefer-nullish-coalescing": "error",
+    "typescript/prefer-optional-chain": "error",
+    "typescript/no-inferrable-types": "error",
+    "typescript/consistent-type-imports": "error",
+    "max-params": ["warn", { "max": 4 }],
+    "max-depth": ["warn", { "max": 3 }],
+    "max-lines": [
+      "warn",
+      { "max": 400, "skipBlankLines": true, "skipComments": true }
+    ],
+    "unicorn/prefer-set-has": "error",
+    "unicorn/prefer-array-some": "error",
+    "unicorn/prefer-string-slice": "error",
+    "unicorn/prefer-number-properties": "error",
+    "oxc/no-accumulating-spread": "error"
+  },
+  "ignorePatterns": [
+    ".nuxt/**",
+    ".output/**",
+    "node_modules/**",
+    "dist/**",
+    "app/local-db/migrations/**",
+    "app/local-db/migrations.generated.ts"
+  ],
+  "overrides": [
+    {
+      "files": ["**/*.vue"],
+      "rules": {
+        "import/no-unassigned-import": ["warn", { "allow": ["**/*.css"] }],
+        "max-lines": [
+          "warn",
+          { "max": 500, "skipBlankLines": true, "skipComments": true }
+        ]
+      }
+    },
+    {
+      "files": ["tests/**/*", "**/*.test.ts", "**/*.spec.ts"],
+      "rules": {
+        "typescript/no-explicit-any": "off",
+        "max-lines": "off"
+      }
+    }
+  ]
+}

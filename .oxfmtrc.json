@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "sortTailwindcss": {},
+  "semi": true,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 80,
+  "endOfLine": "lf",
+  "ignorePatterns": [
+    "pnpm-lock.yaml",
+    "app/local-db/migrations/**",
+    "app/local-db/migrations.generated.ts"
+  ]
+}

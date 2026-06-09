@@ -1,0 +1,68 @@
+@import "@fontsource/public-sans/400.css";
+@import "@fontsource/public-sans/500.css";
+@import "@fontsource/public-sans/600.css";
+@import "@fontsource/public-sans/700.css";
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@theme static {
+  --font-sans: "Public Sans", system-ui, sans-serif;
+}
+
+/* Prevent layout shift when the scrollbar appears */
+html {
+  scrollbar-gutter: stable;
+}
+
+@layer theme {
+  .light,
+  :root:not(.dark) {
+    --ui-bg: var(--ui-color-neutral-50);
+    --ui-bg-muted: var(--ui-color-neutral-100);
+
+    /* Boost text contrast against the softer background */
+    --ui-text-dimmed: var(--ui-color-neutral-500);
+    --ui-text-muted: var(--ui-color-neutral-600);
+    --ui-text-toned: var(--ui-color-neutral-700);
+    --ui-text: var(--ui-color-neutral-800);
+    --ui-text-highlighted: var(--ui-color-neutral-950);
+  }
+}
+
+/* Rendered Markdown (RichTextEditor + read-only prose) */
+.brag-prose {
+  @apply text-sm leading-relaxed text-[var(--ui-text-toned)];
+}
+.brag-prose :where(h1, h2, h3) {
+  @apply mt-3 mb-1 font-semibold text-[var(--ui-text-highlighted)];
+}
+.brag-prose h1 {
+  @apply text-lg;
+}
+.brag-prose h2 {
+  @apply text-base;
+}
+.brag-prose h3 {
+  @apply text-sm;
+}
+.brag-prose ul {
+  @apply my-1 list-disc pl-5;
+}
+.brag-prose ol {
+  @apply my-1 list-decimal pl-5;
+}
+.brag-prose a {
+  @apply text-primary underline;
+}
+.brag-prose code {
+  @apply rounded bg-[var(--ui-bg-muted)] px-1 py-0.5 text-xs;
+}
+.brag-prose p {
+  @apply my-1;
+}
+.brag-prose blockquote {
+  @apply border-l-2 border-[var(--ui-border)] pl-3 text-[var(--ui-text-muted)] italic;
+}
+.brag-prose:focus {
+  @apply outline-none;
+}

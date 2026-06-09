@@ -1,0 +1,29 @@
+# Nuxt
+.nuxt
+.output
+.data
+dist
+
+# Dependencies
+node_modules
+
+# Logs
+logs
+*.log
+
+# Misc
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Editors
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Test / coverage
+coverage
+.vitest
