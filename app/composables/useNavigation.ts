@@ -12,6 +12,7 @@ export const NAV_LINKS: NavLink[] = [
   { label: "Mentoring", icon: "i-lucide-users-round", to: "/mentoring" },
   { label: "Enablement", icon: "i-lucide-presentation", to: "/enablement" },
   { label: "Energy", icon: "i-lucide-activity", to: "/energy" },
+  { label: "Report", icon: "i-lucide-newspaper", to: "/report" },
 ];
 
 export const SETTINGS_LINK: NavLink = {

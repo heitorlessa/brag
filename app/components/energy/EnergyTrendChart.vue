@@ -67,10 +67,36 @@ const xLabels = computed(() => {
       label: formatter.format(new Date(`${reflection.weekStart}T00:00:00Z`)),
     }));
 });
+
+// ── Hover interaction ──────────────────────────────────────────────────────
+const hoverIndex = ref<number | null>(null);
+const hovered = computed(() =>
+  hoverIndex.value === null ? null : (points.value[hoverIndex.value] ?? null)
+);
+const hoverX = computed(() =>
+  hoverIndex.value === null ? 0 : xAt(hoverIndex.value)
+);
+// As a % of the (uniformly scaled) SVG width — works without pixel measuring.
+const tooltipLeft = computed(() =>
+  Math.max(13, Math.min(87, (hoverX.value / W) * 100))
+);
+
+function onMove(event: PointerEvent): void {
+  const n = points.value.length;
+  if (!n) return;
+  const rect = (event.currentTarget as SVGSVGElement).getBoundingClientRect();
+  const ratio = (event.clientX - rect.left) / rect.width;
+  const rel = (ratio * W - pad.l) / innerW;
+  hoverIndex.value = Math.max(0, Math.min(n - 1, Math.round(rel * (n - 1))));
+}
+
+function onLeave(): void {
+  hoverIndex.value = null;
+}
 </script>
 
 <template>
-  <div>
+  <div class="relative">
     <div class="mb-2 flex flex-wrap gap-4">
       <div
         v-for="s in series"
@@ -87,10 +113,12 @@ const xLabels = computed(() => {
 
     <svg
       :viewBox="`0 0 ${W} ${H}`"
-      class="w-full"
+      class="w-full touch-none"
       preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-label="Weekly energy, workload and satisfaction trend"
+      @pointermove="onMove"
+      @pointerleave="onLeave"
     >
       <defs>
         <linearGradient id="brag-energy-area" x1="0" y1="0" x2="0" y2="1">
@@ -131,6 +159,19 @@ const xLabels = computed(() => {
         </text>
       </g>
 
+      <!-- Hover guideline -->
+      <line
+        v-if="hoverIndex !== null"
+        :x1="hoverX"
+        :x2="hoverX"
+        :y1="pad.t"
+        :y2="pad.t + innerH"
+        stroke="var(--ui-text-dimmed)"
+        stroke-width="1"
+        stroke-dasharray="3 3"
+        opacity="0.6"
+      />
+
       <!-- X labels -->
       <text
         v-for="entry in xLabels"
@@ -161,10 +202,59 @@ const xLabels = computed(() => {
           :key="`${s.key}-${reflection.id}`"
           :cx="xAt(index)"
           :cy="yAt(reflection[s.key])"
-          r="2.5"
+          :r="hoverIndex === index ? 4 : 2.5"
           :fill="s.color"
+          :stroke="hoverIndex === index ? 'var(--ui-bg)' : 'none'"
+          :stroke-width="hoverIndex === index ? 1.5 : 0"
+          class="transition-[r]"
         />
       </g>
     </svg>
+
+    <!-- Hover tooltip -->
+    <Transition name="brag-pop">
+      <div
+        v-if="hovered"
+        class="brag-tip pointer-events-none absolute top-7 z-10 rounded-xl bg-[var(--ui-bg)] px-3 py-2 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.35)] ring-1 ring-[var(--ui-border)]"
+        :style="{ left: `${tooltipLeft}%` }"
+      >
+        <p class="mb-1.5 text-xs font-medium text-[var(--ui-text-highlighted)]">
+          {{ formatWeekLabel(hovered.weekStart) }}
+        </p>
+        <div class="space-y-1">
+          <div
+            v-for="s in series"
+            :key="s.key"
+            class="flex items-center gap-2 text-xs"
+          >
+            <span
+              class="size-2 rounded-full"
+              :style="{ backgroundColor: s.color }"
+            />
+            <span class="text-[var(--ui-text-muted)]">{{ s.label }}</span>
+            <span class="ms-auto font-semibold text-[var(--ui-text)]">
+              {{ hovered[s.key] }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
+
+<style scoped>
+.brag-tip {
+  transform: translateX(-50%);
+}
+.brag-pop-enter-active,
+.brag-pop-leave-active {
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.brag-pop-enter-from,
+.brag-pop-leave-to {
+  opacity: 0;
+  transform: translate(-50%, 4px) scale(0.97);
+}
+</style>

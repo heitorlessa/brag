@@ -73,17 +73,61 @@ body {
     --ui-text-toned: var(--ui-color-neutral-700);
     --ui-text: var(--ui-color-neutral-800);
     --ui-text-highlighted: var(--ui-color-neutral-950);
+
+    /* Subtle elevation: a hair-lighter top edge + soft layered shadow. */
+    --surface-top: color-mix(in oklab, var(--ui-bg) 90%, white);
+    --surface-shadow:
+      0 1px 2px -1px rgb(15 23 42 / 0.06),
+      0 14px 36px -22px rgb(15 23 42 / 0.22);
+    --surface-shadow-hover:
+      0 1px 2px -1px rgb(15 23 42 / 0.08),
+      0 24px 56px -28px rgb(15 23 42 / 0.32);
+    --page-glow: color-mix(
+      in oklab,
+      var(--ui-color-primary-400) 9%,
+      transparent
+    );
+  }
+
+  .dark {
+    --surface-top: color-mix(in oklab, var(--ui-bg) 88%, white);
+    --surface-shadow:
+      0 1px 2px -1px rgb(0 0 0 / 0.5), 0 18px 44px -26px rgb(0 0 0 / 0.7);
+    --surface-shadow-hover:
+      0 1px 2px -1px rgb(0 0 0 / 0.55), 0 28px 64px -30px rgb(0 0 0 / 0.8);
+    --page-glow: color-mix(
+      in oklab,
+      var(--ui-color-primary-500) 14%,
+      transparent
+    );
   }
 }
 
+/* Faint primary glow at the top of the page — lively, never loud. */
+body {
+  background-image: radial-gradient(
+    1100px 520px at 78% -8%,
+    var(--page-glow),
+    transparent 62%
+  );
+  background-attachment: fixed;
+}
+
 /* ── Surfaces ──────────────────────────────────────────────────────────────
-   A lighter alternative to UCard: hairline ring, soft radius, no shadow until
-   hover. Used to reduce card-heaviness while keeping gentle grouping. */
+   A lighter alternative to UCard: hairline ring, soft radius, a gentle
+   top-down gradient + layered shadow for quiet elevation in both themes. */
 .surface {
   @apply rounded-2xl ring-1 ring-[var(--ui-border)]/70;
+  background-image: linear-gradient(180deg, var(--surface-top), var(--ui-bg));
+  box-shadow: var(--surface-shadow);
 }
 .surface-hover {
-  @apply transition-all duration-200 hover:shadow-[0_2px_24px_-12px_rgba(0,0,0,0.25)] hover:ring-[var(--ui-border)];
+  @apply transition-all duration-300;
+}
+.surface-hover:hover {
+  box-shadow: var(--surface-shadow-hover);
+  @apply ring-[var(--ui-border)];
+  transform: translateY(-1px);
 }
 
 /* Hairline row divider list */
