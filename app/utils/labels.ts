@@ -21,6 +21,7 @@ export const enablementTypeMeta: Record<
   talk: { label: "Talk", icon: "i-lucide-mic" },
   training: { label: "Training", icon: "i-lucide-graduation-cap" },
   doc: { label: "Doc", icon: "i-lucide-file-text" },
+  review: { label: "Review", icon: "i-lucide-file-search" },
   office_hours: { label: "Office hours", icon: "i-lucide-coffee" },
 };
 

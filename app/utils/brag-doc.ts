@@ -24,6 +24,7 @@ const ENABLEMENT_LABELS: Record<string, string> = {
   talk: "Talk",
   training: "Training",
   doc: "Doc",
+  review: "Review",
   office_hours: "Office hours",
 };
 

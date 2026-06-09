@@ -88,7 +88,7 @@ export const enablement = sqliteTable("enablement", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   type: text("type", {
-    enum: ["workshop", "talk", "training", "doc", "office_hours"],
+    enum: ["workshop", "talk", "training", "doc", "review", "office_hours"],
   })
     .notNull()
     .default("workshop"),

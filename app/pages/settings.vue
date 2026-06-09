@@ -418,6 +418,13 @@ const active = ref<SectionId>("backup");
             wipes existing data). For a full replace, use a JSON backup under
             Backup &amp; restore.
           </p>
+          <p class="text-sm text-[var(--ui-text-muted)]">
+            If your browser exposes
+            <code class="text-primary">navigator.modelContext</code> (WebMCP),
+            Brag also registers these as MCP tools automatically — so a
+            WebMCP-capable agent can discover and call them without any glue
+            code.
+          </p>
         </section>
 
         <!-- About -->
