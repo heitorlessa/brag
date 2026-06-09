@@ -25,10 +25,25 @@ export default defineNuxtConfig({
   // default would prefix it to <AchievementsAchievementCard>).
   components: [{ path: "~/components", pathPrefix: false }],
 
-  // NOTE: do NOT set cross-origin isolation (COOP/COEP require-corp) headers.
-  // SQLocal uses the OPFS sync-access-handle pool VFS, which works WITHOUT
-  // cross-origin isolation. Forcing `require-corp` blocks subresources on
-  // hosts like Vercel and leaves the database stuck initializing.
+  // SQLocal persists SQLite to OPFS, which requires the page to be
+  // cross-origin isolated (SharedArrayBuffer + Atomics) — this is mandatory for
+  // SQLocal/sqlite-wasm, there is no headerless persistence path. The SQLocal
+  // Vite plugin sets these headers in dev; emit them on the production server
+  // too, or persistence silently fails and all data resets on every reload.
+  // All subresources here are same-origin (local icon bundle + bundled fonts),
+  // so `require-corp` blocks nothing.
+  $production: {
+    nitro: {
+      routeRules: {
+        "/**": {
+          headers: {
+            "Cross-Origin-Opener-Policy": "same-origin",
+            "Cross-Origin-Embedder-Policy": "require-corp",
+          },
+        },
+      },
+    },
+  },
 
   colorMode: {
     preference: "system",
