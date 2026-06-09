@@ -76,6 +76,50 @@ function reloadNow(): void {
         </div>
       </div>
 
+      <!-- Page isn't cross-origin isolated (extension / toolbar interfering) -->
+      <div v-else-if="dbReason === 'noisolation'" class="p-6 text-center">
+        <span
+          class="bg-warning/10 text-warning mx-auto mb-4 flex size-12 items-center justify-center rounded-2xl"
+        >
+          <UIcon name="i-lucide-shield-alert" class="size-6" />
+        </span>
+        <h2 class="text-lg font-semibold text-[var(--ui-text-highlighted)]">
+          Storage is blocked here
+        </h2>
+        <p class="mt-2 text-sm text-[var(--ui-text-muted)]">
+          Brag needs cross-origin isolation to save your data, but this page
+          isn't isolated — usually a browser extension or an injected toolbar
+          interfering. Nothing is being saved.
+        </p>
+        <ul
+          class="mx-auto mt-3 max-w-xs space-y-1 text-left text-sm text-[var(--ui-text-muted)]"
+        >
+          <li class="flex gap-2">
+            <UIcon
+              name="i-lucide-dot"
+              class="text-primary mt-0.5 size-4 shrink-0"
+            />
+            Open Brag in an Incognito / Private window, or
+          </li>
+          <li class="flex gap-2">
+            <UIcon
+              name="i-lucide-dot"
+              class="text-primary mt-0.5 size-4 shrink-0"
+            />
+            Disable extensions for this site (or use a clean profile).
+          </li>
+        </ul>
+        <div class="mt-5 flex justify-center">
+          <UButton
+            icon="i-lucide-refresh-cw"
+            label="Reload"
+            color="neutral"
+            variant="outline"
+            @click="reloadNow"
+          />
+        </div>
+      </div>
+
       <!-- Stuck / corrupt store -->
       <div v-else class="p-6 text-center">
         <span

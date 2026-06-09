@@ -16,7 +16,7 @@ import { ref } from "vue";
 import { getDb, resetClient, wipeLocalStorage } from "./client";
 
 export type DbState = "initializing" | "ready" | "error";
-export type DbReason = "multitab" | "stuck" | "unknown";
+export type DbReason = "multitab" | "noisolation" | "stuck" | "unknown";
 
 export const dbState = ref<DbState>("initializing");
 export const dbReason = ref<DbReason>("unknown");
@@ -29,7 +29,12 @@ async function initDb(): Promise<void> {
     dbReason.value = "unknown";
   } catch (error) {
     console.error("[local-db] initialization failed:", error);
-    dbReason.value = "stuck";
+    // OPFS persistence needs the page to be cross-origin isolated. If it isn't
+    // (a browser extension or injected toolbar stripping/blocking the COEP
+    // context), say so specifically — reset won't help that.
+    const isolated =
+      typeof window === "undefined" || window.crossOriginIsolated !== false;
+    dbReason.value = isolated ? "stuck" : "noisolation";
     dbState.value = "error";
   }
 }
