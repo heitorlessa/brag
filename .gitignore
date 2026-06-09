@@ -27,3 +27,6 @@ logs
 # Test / coverage
 coverage
 .vitest
+
+# Vercel
+.vercel

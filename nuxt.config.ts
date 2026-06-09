@@ -10,9 +10,34 @@ export default defineNuxtConfig({
     port: 3000,
   },
 
-  modules: ["@nuxt/ui", "@nuxt/icon", "@vueuse/nuxt", "@nuxt/eslint"],
+  modules: [
+    "@nuxt/ui",
+    "@nuxt/icon",
+    "@vueuse/nuxt",
+    "@nuxt/eslint",
+    "motion-v/nuxt",
+  ],
 
   css: ["~/assets/css/main.css"],
+
+  // Register components by bare filename regardless of folder, so e.g.
+  // components/achievements/AchievementCard.vue is <AchievementCard> (Nuxt's
+  // default would prefix it to <AchievementsAchievementCard>).
+  components: [{ path: "~/components", pathPrefix: false }],
+
+  // SQLocal's OPFS sync access (SQLite WASM) requires the page to be
+  // cross-origin isolated in production. The SQLocal Vite plugin sets these in
+  // dev; these route rules ensure the deployed (e.g. Vercel) build does too.
+  nitro: {
+    routeRules: {
+      "/**": {
+        headers: {
+          "Cross-Origin-Opener-Policy": "same-origin",
+          "Cross-Origin-Embedder-Policy": "require-corp",
+        },
+      },
+    },
+  },
 
   colorMode: {
     preference: "system",
