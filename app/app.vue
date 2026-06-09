@@ -13,6 +13,7 @@ useHead({
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
+      <DbRecoveryModal />
     </MotionConfig>
   </UApp>
 </template>
