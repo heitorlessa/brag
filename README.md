@@ -53,6 +53,12 @@ JSON** regularly to keep a backup — clearing browser storage will erase it.
 - **TipTap** WYSIWYG editor that stores **Markdown**
 - **Vitest** · **oxlint / ESLint / oxfmt** quality gates enforced on commit via **Husky**
 
+## Automating data entry
+
+Brag exposes a `window.brag` API, WebMCP tools, and an append-from-file import so
+an agent can ingest data without clicking through forms. See
+[AUTOMATION.md](./AUTOMATION.md) for the data shapes and copy-paste recipes.
+
 ## Roadmap
 
 Brag is in early dogfooding — the plan is to use it daily for a month before
