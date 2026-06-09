@@ -41,6 +41,16 @@ export default defineNuxtConfig({
             "Cross-Origin-Embedder-Policy": "require-corp",
           },
         },
+        // Under a require-corp document, same-origin subresources (the SQLocal
+        // worker, wasm, fonts) must still carry CORP or they're blocked. On
+        // Vercel these are served by dedicated asset routes that don't inherit
+        // the "/**" headers, so stamp CORP on them explicitly.
+        "/_nuxt/**": {
+          headers: { "Cross-Origin-Resource-Policy": "same-origin" },
+        },
+        "/_fonts/**": {
+          headers: { "Cross-Origin-Resource-Policy": "same-origin" },
+        },
       },
     },
   },
