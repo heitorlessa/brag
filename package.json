@@ -36,6 +36,7 @@
     "drizzle-orm": "^0.45.2",
     "drizzle-zod": "^0.8.3",
     "markdown-it": "^14.2.0",
+    "motion-v": "^2.3.0",
     "nuxt": "^4.4.4",
     "sqlocal": "^0.17.0",
     "tailwindcss": "^4.1.18",
