@@ -3,6 +3,8 @@
 > A **local-first, privacy-first** record of your achievements — and the goals,
 > people, and energy behind them.
 
+**▶ Try it live: [brag-heitor-lessas-projects.vercel.app](https://brag-heitor-lessas-projects.vercel.app)** — runs entirely in your browser; nothing is sent anywhere.
+
 Keep track of the wins you'll forget by review season: the goals you set, the
 people you mentor, the enablement you run, and a weekly energy check-in to catch
 burnout before it catches you.
