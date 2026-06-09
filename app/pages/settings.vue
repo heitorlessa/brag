@@ -9,6 +9,7 @@ import { listAchievements } from "~/services/achievements";
 import { listEnablement } from "~/services/enablement";
 import { listAllSessions, listPeople } from "~/services/mentoring";
 import { SAMPLE_PREF, seedSampleData } from "~/services/seed";
+import { importMerge, type MergePayload } from "~/services/ingest";
 import { isOpfsAvailable } from "~/local-db";
 import { useStorage } from "@vueuse/core";
 
@@ -64,6 +65,62 @@ async function onImportFile(event: Event): Promise<void> {
   } finally {
     busy.value = false;
     if (fileInput.value) fileInput.value.value = "";
+  }
+}
+
+// ── Merge import (append, never replace) ────────────────────────────────────
+const mergeInput = ref<HTMLInputElement | null>(null);
+
+function asArray(value: unknown): unknown[] | undefined {
+  return Array.isArray(value) ? value : undefined;
+}
+
+function toMergePayload(parsed: unknown): MergePayload {
+  const root = (parsed && typeof parsed === "object" ? parsed : {}) as Record<
+    string,
+    unknown
+  >;
+  // Accept either a merge payload (top-level arrays) or a Brag backup (.data).
+  const data = (
+    root.data && typeof root.data === "object" ? root.data : root
+  ) as Record<string, unknown>;
+  const arr = asArray;
+  return {
+    goals: arr(data.goals) as MergePayload["goals"],
+    achievements: arr(data.achievements) as MergePayload["achievements"],
+    people: arr(data.people) as MergePayload["people"],
+    sessions: (arr(data.sessions) ??
+      arr(data.mentoring_sessions)) as MergePayload["sessions"],
+    enablement: arr(data.enablement) as MergePayload["enablement"],
+    energy: (arr(data.energy) ??
+      arr(data.energy_reflections)) as MergePayload["energy"],
+  };
+}
+
+async function onMergeFile(event: Event): Promise<void> {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  busy.value = true;
+  try {
+    const parsed: unknown = JSON.parse(await readFileAsText(file));
+    const r = await importMerge(toMergePayload(parsed));
+    const total =
+      r.goals +
+      r.achievements +
+      r.people +
+      r.sessions +
+      r.enablement +
+      r.energy;
+    toast.add({
+      title: `Added ${total} records — reloading…`,
+      color: "success",
+    });
+    window.location.reload();
+  } catch {
+    toast.add({ title: "Could not read that file", color: "error" });
+  } finally {
+    busy.value = false;
+    if (mergeInput.value) mergeInput.value.value = "";
   }
 }
 
@@ -250,8 +307,9 @@ const active = ref<SectionId>("backup");
               Backup &amp; restore
             </h2>
             <p class="mt-1 text-sm text-[var(--ui-text-muted)]">
-              Export the whole database to a JSON file, or restore from one.
-              Restoring replaces everything.
+              Export the whole database to a JSON file. Import to
+              <strong>replace</strong> everything, or append to add records
+              (e.g. a file produced by an agent) without touching what's there.
             </p>
           </div>
           <div class="flex flex-wrap gap-2.5">
@@ -264,10 +322,18 @@ const active = ref<SectionId>("backup");
               @click="onExportJson"
             />
             <UButton
-              icon="i-lucide-upload"
-              label="Import JSON"
+              icon="i-lucide-file-plus-2"
+              label="Append from file"
               color="neutral"
               variant="outline"
+              :disabled="busy"
+              @click="mergeInput?.click()"
+            />
+            <UButton
+              icon="i-lucide-upload"
+              label="Import (replace)"
+              color="neutral"
+              variant="ghost"
               :disabled="busy"
               @click="fileInput?.click()"
             />
@@ -277,6 +343,13 @@ const active = ref<SectionId>("backup");
               accept="application/json"
               class="hidden"
               @change="onImportFile"
+            />
+            <input
+              ref="mergeInput"
+              type="file"
+              accept="application/json"
+              class="hidden"
+              @change="onMergeFile"
             />
           </div>
         </section>
@@ -424,6 +497,12 @@ const active = ref<SectionId>("backup");
             Brag also registers these as MCP tools automatically — so a
             WebMCP-capable agent can discover and call them without any glue
             code.
+          </p>
+          <p class="text-sm text-[var(--ui-text-muted)]">
+            No browser at all? Have the agent write a JSON file in the
+            <code class="text-primary">importMerge</code> shape (or a full
+            backup) and use <strong>Append from file</strong> under Backup &amp;
+            restore.
           </p>
         </section>
 
