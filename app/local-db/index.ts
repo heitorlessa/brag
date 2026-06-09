@@ -5,6 +5,7 @@ export {
   getDb,
   getClient,
   resetClient,
+  wipeLocalStorage,
   isOpfsAvailable,
   type BragDatabase,
 } from "./client";

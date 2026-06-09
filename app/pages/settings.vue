@@ -10,7 +10,7 @@ import { listEnablement } from "~/services/enablement";
 import { listAllSessions, listPeople } from "~/services/mentoring";
 import { hasDemoData, removeDemoData, seedDemoData } from "~/services/seed";
 import { importMerge, type MergePayload } from "~/services/ingest";
-import { isOpfsAvailable } from "~/local-db";
+import { isOpfsAvailable, wipeLocalStorage } from "~/local-db";
 
 definePageMeta({ title: "Settings" });
 
@@ -245,6 +245,26 @@ async function onClearAll(): Promise<void> {
   }
 }
 
+async function onResetStorage(): Promise<void> {
+  if (
+    !window.confirm(
+      "Reset local storage? This deletes ALL local data and fixes a stuck database. Close other Brag tabs first."
+    )
+  ) {
+    return;
+  }
+  busy.value = true;
+  try {
+    await wipeLocalStorage();
+    toast.add({ title: "Storage reset — reloading…", color: "neutral" });
+    window.location.reload();
+  } catch (error) {
+    onDbError(error);
+  } finally {
+    busy.value = false;
+  }
+}
+
 // ── Secondary navigation (Claude-style left menu) ───────────────────────────
 const sections = [
   { id: "backup", label: "Backup & restore", icon: "i-lucide-database-backup" },
@@ -462,17 +482,28 @@ const active = ref<SectionId>("backup");
               Danger zone
             </p>
             <p class="mt-1 mb-3 text-sm text-[var(--ui-text-muted)]">
-              Permanently delete all achievements, goals, mentoring, enablement
-              and energy data.
+              Clear all data, or reset local storage if the database is stuck
+              (e.g. "Storage isn't ready"). Both delete everything; reset also
+              wipes the underlying OPFS store. Close other Brag tabs first.
             </p>
-            <UButton
-              icon="i-lucide-trash-2"
-              label="Clear all data"
-              color="error"
-              variant="soft"
-              :disabled="busy"
-              @click="onClearAll"
-            />
+            <div class="flex flex-wrap gap-2.5">
+              <UButton
+                icon="i-lucide-trash-2"
+                label="Clear all data"
+                color="error"
+                variant="soft"
+                :disabled="busy"
+                @click="onClearAll"
+              />
+              <UButton
+                icon="i-lucide-refresh-cw"
+                label="Reset local storage"
+                color="error"
+                variant="soft"
+                :disabled="busy"
+                @click="onResetStorage"
+              />
+            </div>
           </div>
         </section>
 

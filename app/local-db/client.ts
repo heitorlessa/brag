@@ -92,3 +92,32 @@ export function resetClient(): void {
   db = null;
   readyPromise = null;
 }
+
+/**
+ * Hard reset: delete the OPFS-backed database directly via the browser's
+ * storage API, bypassing the SQLocal worker. Recovers from a stuck/corrupt
+ * store when the worker itself can't be reached. Destroys ALL local data.
+ *
+ * If an entry is locked by another open tab it's skipped — close other tabs
+ * first for a full reset.
+ */
+export async function wipeLocalStorage(): Promise<void> {
+  resetClient();
+  if (typeof navigator === "undefined" || !navigator.storage?.getDirectory) {
+    return;
+  }
+  const root = await navigator.storage.getDirectory();
+  const dir = root as FileSystemDirectoryHandle & {
+    keys?: () => AsyncIterableIterator<string>;
+  };
+  if (!dir.keys) return;
+  const names: string[] = [];
+  for await (const name of dir.keys()) names.push(name);
+  for (const name of names) {
+    try {
+      await root.removeEntry(name, { recursive: true });
+    } catch {
+      // Entry is locked by another tab — skip; user must close other tabs.
+    }
+  }
+}
