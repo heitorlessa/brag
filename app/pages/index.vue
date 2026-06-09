@@ -1,11 +1,48 @@
 <script setup lang="ts">
 definePageMeta({ title: "Dashboard" });
 
-const { achievements } = useAchievements();
-const { goals } = useGoals();
-const { people } = useMentoring();
-const { enablement } = useEnablement();
-const { reflections } = useEnergy();
+const { achievements, isLoading: loadingAchievements } = useAchievements();
+const { goals, isLoading: loadingGoals } = useGoals();
+const { people, isLoading: loadingPeople } = useMentoring();
+const { enablement, isLoading: loadingEnablement } = useEnablement();
+const { reflections, isLoading: loadingReflections } = useEnergy();
+
+// ── Demo data: one-click load for first-time visitors, removable any time ───
+const demo = useDemoData();
+
+const loading = computed(
+  () =>
+    loadingAchievements.value ||
+    loadingGoals.value ||
+    loadingPeople.value ||
+    loadingEnablement.value ||
+    loadingReflections.value
+);
+
+const isEmpty = computed(
+  () =>
+    !achievements.value.length &&
+    !goals.value.length &&
+    !people.value.length &&
+    !enablement.value.length &&
+    !reflections.value.length
+);
+
+const hasDemo = computed(() =>
+  [
+    ...achievements.value,
+    ...goals.value,
+    ...people.value,
+    ...enablement.value,
+    ...reflections.value,
+  ].some((row) => demo.isDemoRow(row.id))
+);
+
+// Show the cue only once everything has loaded and the database is truly empty,
+// so it never flashes during boot or nags after the user has data.
+const showDemoCue = computed(
+  () => !loading.value && isEmpty.value && !demo.dismissed.value
+);
 
 const activeGoals = computed(() =>
   goals.value.filter((g) => g.status === "in_progress")
@@ -71,6 +108,70 @@ const energyRows = computed(() =>
 
 <template>
   <div class="space-y-10">
+    <!-- First-run cue: load demo data in one click -->
+    <FadeIn v-if="showDemoCue">
+      <section
+        class="surface flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6"
+      >
+        <div class="flex items-start gap-3">
+          <UIcon
+            name="i-lucide-sparkles"
+            class="text-primary mt-0.5 size-5 shrink-0"
+          />
+          <div>
+            <p class="font-medium text-[var(--ui-text-highlighted)]">
+              New here? Explore with demo data.
+            </p>
+            <p class="mt-0.5 text-sm text-[var(--ui-text-muted)]">
+              Loads a realistic example dataset so you can look around. Remove
+              it anytime — it never touches entries you add.
+            </p>
+          </div>
+        </div>
+        <div class="flex shrink-0 items-center gap-2 sm:pl-3">
+          <UButton
+            label="Dismiss"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            :disabled="demo.busy.value"
+            @click="demo.dismiss()"
+          />
+          <UButton
+            label="Load demo data"
+            icon="i-lucide-sparkles"
+            color="primary"
+            size="sm"
+            :loading="demo.busy.value"
+            @click="demo.load()"
+          />
+        </div>
+      </section>
+    </FadeIn>
+
+    <!-- Demo data is loaded: offer a one-click removal -->
+    <FadeIn v-else-if="hasDemo">
+      <section
+        class="flex items-center justify-between gap-3 rounded-xl bg-[var(--ui-bg-muted)]/50 px-4 py-3 ring-1 ring-[var(--ui-border)]/60"
+      >
+        <span
+          class="inline-flex items-center gap-2 text-sm text-[var(--ui-text-muted)]"
+        >
+          <UIcon name="i-lucide-sparkles" class="size-4 shrink-0" />
+          You're exploring with demo data.
+        </span>
+        <UButton
+          label="Remove demo data"
+          icon="i-lucide-trash-2"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          :loading="demo.busy.value"
+          @click="demo.remove()"
+        />
+      </section>
+    </FadeIn>
+
     <!-- Hero -->
     <FadeIn>
       <div>

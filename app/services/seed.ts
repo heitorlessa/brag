@@ -1,15 +1,40 @@
 /**
- * Sample data so a first-time visitor can see the app's full potential.
- * `autoSeedIfEmpty()` runs once on a fresh database; `seedSampleData()` is also
- * exposed via Settings → "Load sample data".
+ * Demo data: a realistic example dataset a first-time visitor can load in one
+ * click to explore Brag — and remove just as easily.
+ *
+ * Every demo row's `id` is prefixed with `demo-`, so the demo set can be
+ * deleted precisely (`removeDemoData`) without touching anything the user
+ * created themselves. Loading is idempotent: it clears any existing demo rows
+ * first, so loading twice never duplicates (and never trips the unique-week
+ * constraint on energy reflections).
  */
-import { createAchievement } from "./achievements";
-import { createGoal } from "./goals";
-import { createEnablement } from "./enablement";
-import { createPerson, createSession } from "./mentoring";
-import { upsertReflection } from "./energy";
-import { achievements, getDb } from "~/local-db";
+import {
+  achievements,
+  enablement,
+  energyReflections,
+  getDb,
+  goals,
+  like,
+  mentoringSessions,
+  nowISO,
+  people,
+} from "~/local-db";
+import type {
+  NewAchievement,
+  NewEnablement,
+  NewEnergyReflection,
+  NewGoal,
+  NewMentoringSession,
+  NewPerson,
+} from "~/local-db";
 import { addWeeks, currentWeekStart, today } from "~/utils/date";
+
+/** Prefix marking a row as demo data, so it can be removed precisely. */
+export const DEMO_PREFIX = "demo-";
+
+function demoId(): string {
+  return `${DEMO_PREFIX}${crypto.randomUUID()}`;
+}
 
 function daysAgo(n: number): string {
   const date = new Date();
@@ -17,70 +42,85 @@ function daysAgo(n: number): string {
   return date.toISOString().slice(0, 10);
 }
 
-const SEED_FLAG = "brag:auto-seeded";
-export const SAMPLE_PREF = "brag:sample-enabled";
+/** Load the demo dataset (replacing any demo rows already present). */
+export async function seedDemoData(): Promise<void> {
+  const db = await getDb();
+  await removeDemoData(); // start clean so a second load never duplicates
 
-export async function seedSampleData(): Promise<void> {
-  // ── Goals ──────────────────────────────────────────────────────────────
+  const now = nowISO();
   const year = new Date().getFullYear();
-  const leadership = await createGoal({
-    title: "Grow as a technical leader",
-    description:
-      "Move from individual impact to multiplying the team.\n\n- Mentor 3+ engineers\n- Run regular enablement\n- Be the go-to for architecture",
-    year,
-    category: "Growth",
-    status: "in_progress",
-    progress: 60,
-    targetDate: null,
-  });
-  const devex = await createGoal({
-    title: "Improve developer experience",
-    description:
-      "Make the inner loop fast and pleasant.\n\n- Cut CI time in half\n- Document the golden paths",
-    year,
-    category: "Impact",
-    status: "in_progress",
-    progress: 45,
-    targetDate: daysAgo(-120),
-  });
-  await createGoal({
-    title: "Build a sustainable mentoring practice",
-    description: "Regular, low-friction mentoring that doesn't burn me out.",
-    year,
-    category: "People",
-    status: "in_progress",
-    progress: 75,
-    targetDate: null,
-  });
-  await createGoal({
-    title: "Write more, publicly",
-    description: "Ship one substantial post a month.",
-    year,
-    category: "Influence",
-    status: "not_started",
-    progress: 10,
-    targetDate: null,
-  });
-  await createGoal({
-    title: "Ship the Brag app",
-    description: "A local-first record of achievements. ✅",
-    year,
-    category: "Side project",
-    status: "done",
-    progress: 100,
-    targetDate: null,
-  });
+
+  // ── Goals ──────────────────────────────────────────────────────────────
+  const leadershipId = demoId();
+  const devexId = demoId();
+  const goalRows: NewGoal[] = [
+    {
+      id: leadershipId,
+      title: "Grow as a technical leader",
+      description:
+        "Move from individual impact to multiplying the team.\n\n- Mentor 3+ engineers\n- Run regular enablement\n- Be the go-to for architecture",
+      year,
+      category: "Growth",
+      status: "in_progress",
+      progress: 60,
+      targetDate: null,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: devexId,
+      title: "Improve developer experience",
+      description:
+        "Make the inner loop fast and pleasant.\n\n- Cut CI time in half\n- Document the golden paths",
+      year,
+      category: "Impact",
+      status: "in_progress",
+      progress: 45,
+      targetDate: daysAgo(-120),
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: demoId(),
+      title: "Build a sustainable mentoring practice",
+      description: "Regular, low-friction mentoring that doesn't burn me out.",
+      year,
+      category: "People",
+      status: "in_progress",
+      progress: 75,
+      targetDate: null,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: demoId(),
+      title: "Write more, publicly",
+      description: "Ship one substantial post a month.",
+      year,
+      category: "Influence",
+      status: "not_started",
+      progress: 10,
+      targetDate: null,
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: demoId(),
+      title: "Ship the Brag app",
+      description: "A local-first record of achievements. ✅",
+      year,
+      category: "Side project",
+      status: "done",
+      progress: 100,
+      targetDate: null,
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+  await db.insert(goals).values(goalRows);
 
   // ── Achievements ─────────────────────────────────────────────────────────
-  const achievementsSeed: {
-    title: string;
-    description: string;
-    impact: string;
-    category: string;
-    tags: string[];
-    occurredAt: string;
-    goalId: string | null;
-  }[] = [
+  const achievementRows: NewAchievement[] = [
     {
       title: "Shipped the local-first Brag app",
       description:
@@ -89,7 +129,7 @@ export async function seedSampleData(): Promise<void> {
       category: "Delivery",
       tags: ["launch", "oss"],
       occurredAt: today(),
-      goalId: leadership.id,
+      goalId: leadershipId,
     },
     {
       title: "Led the platform migration",
@@ -99,7 +139,7 @@ export async function seedSampleData(): Promise<void> {
       category: "Delivery",
       tags: ["platform", "leadership"],
       occurredAt: daysAgo(24),
-      goalId: leadership.id,
+      goalId: leadershipId,
     },
     {
       title: "Reduced CI time by 40%",
@@ -108,7 +148,7 @@ export async function seedSampleData(): Promise<void> {
       category: "Delivery",
       tags: ["devex", "performance"],
       occurredAt: daysAgo(48),
-      goalId: devex.id,
+      goalId: devexId,
     },
     {
       title: "Two mentees promoted",
@@ -136,7 +176,7 @@ export async function seedSampleData(): Promise<void> {
       category: "Influence",
       tags: ["docs", "standards"],
       occurredAt: daysAgo(110),
-      goalId: devex.id,
+      goalId: devexId,
     },
     {
       title: "Resolved the top customer escalation",
@@ -147,74 +187,90 @@ export async function seedSampleData(): Promise<void> {
       occurredAt: daysAgo(135),
       goalId: null,
     },
-  ];
-  for (const a of achievementsSeed) await createAchievement(a);
+  ].map((a) =>
+    Object.assign(a, { id: demoId(), createdAt: now, updatedAt: now })
+  );
+  await db.insert(achievements).values(achievementRows);
 
   // ── People + sessions ─────────────────────────────────────────────────────
-  const alex = await createPerson({
-    name: "Alex Doe",
-    role: "Junior engineer",
-    relationship: "regular",
-    cadence: "Biweekly",
-    notes: "Focusing on system design fundamentals and scoping work.",
-    active: true,
-    startedAt: daysAgo(150),
-  });
-  await createSession({
-    personId: alex.id,
-    date: daysAgo(7),
-    topic: "Scoping a project",
-    notes: "Broke a vague task into a 2-week plan with checkpoints.",
-  });
-  await createSession({
-    personId: alex.id,
-    date: daysAgo(21),
-    topic: "Code review habits",
-    notes: "Reviewed how to give and receive feedback kindly and fast.",
-  });
+  const alexId = demoId();
+  const samId = demoId();
+  const jordanId = demoId();
+  const peopleRows: NewPerson[] = [
+    {
+      id: alexId,
+      name: "Alex Doe",
+      role: "Junior engineer",
+      relationship: "regular",
+      cadence: "Biweekly",
+      notes: "Focusing on system design fundamentals and scoping work.",
+      active: true,
+      startedAt: daysAgo(150),
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: samId,
+      name: "Sam Rivera",
+      role: "Mid-level engineer",
+      relationship: "regular",
+      cadence: "Monthly",
+      notes: "Working toward tech-lead scope.",
+      active: true,
+      startedAt: daysAgo(90),
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: jordanId,
+      name: "Jordan Lee",
+      role: "New grad",
+      relationship: "ad_hoc",
+      cadence: "On request",
+      notes: "Occasional career and confidence check-ins.",
+      active: true,
+      startedAt: daysAgo(40),
+      createdAt: now,
+      updatedAt: now,
+    },
+  ];
+  await db.insert(people).values(peopleRows);
 
-  const sam = await createPerson({
-    name: "Sam Rivera",
-    role: "Mid-level engineer",
-    relationship: "regular",
-    cadence: "Monthly",
-    notes: "Working toward tech-lead scope.",
-    active: true,
-    startedAt: daysAgo(90),
-  });
-  await createSession({
-    personId: sam.id,
-    date: daysAgo(12),
-    topic: "Leading without authority",
-    notes: "Talked through driving a cross-team initiative.",
-  });
-
-  const jordan = await createPerson({
-    name: "Jordan Lee",
-    role: "New grad",
-    relationship: "ad_hoc",
-    cadence: "On request",
-    notes: "Occasional career and confidence check-ins.",
-    active: true,
-    startedAt: daysAgo(40),
-  });
-  await createSession({
-    personId: jordan.id,
-    date: daysAgo(30),
-    topic: "First-90-days",
-    notes: "Set expectations and a learning plan.",
-  });
+  const sessionRows: NewMentoringSession[] = [
+    {
+      personId: alexId,
+      date: daysAgo(7),
+      topic: "Scoping a project",
+      notes: "Broke a vague task into a 2-week plan with checkpoints.",
+    },
+    {
+      personId: alexId,
+      date: daysAgo(21),
+      topic: "Code review habits",
+      notes: "Reviewed how to give and receive feedback kindly and fast.",
+    },
+    {
+      personId: samId,
+      date: daysAgo(12),
+      topic: "Leading without authority",
+      notes: "Talked through driving a cross-team initiative.",
+    },
+    {
+      personId: jordanId,
+      date: daysAgo(30),
+      topic: "First-90-days",
+      notes: "Set expectations and a learning plan.",
+    },
+  ].map((s) =>
+    Object.assign(s, { id: demoId(), createdAt: now, updatedAt: now })
+  );
+  await db.insert(mentoringSessions).values(sessionRows);
 
   // ── Enablement ─────────────────────────────────────────────────────────────
-  const enablementSeed: {
-    title: string;
-    type: "workshop" | "talk" | "training" | "doc" | "office_hours";
-    audience: string;
-    date: string;
-    attendees: number | null;
-    link: string | null;
-    notes: string;
-  }[] = [
+  const enablementSeed: Omit<
+    NewEnablement,
+    "id" | "createdAt" | "updatedAt"
+  >[] = [
     {
       title: "New-hire onboarding workshop",
       type: "workshop",
@@ -263,7 +319,10 @@ export async function seedSampleData(): Promise<void> {
       notes: "Open room for architecture and career questions.",
     },
   ];
-  for (const e of enablementSeed) await createEnablement(e);
+  const enablementRows: NewEnablement[] = enablementSeed.map((e) =>
+    Object.assign(e, { id: demoId(), createdAt: now, updatedAt: now })
+  );
+  await db.insert(enablement).values(enablementRows);
 
   // ── Energy: ~14 weeks with a dip-and-recover arc ──────────────────────────
   const week = currentWeekStart();
@@ -290,40 +349,53 @@ export async function seedSampleData(): Promise<void> {
     9: "Took two afternoons off to recover.",
     13: "Feeling balanced again.",
   };
-  for (let i = 0; i < arc.length; i += 1) {
-    const [energy, workload, satisfaction] = arc[i] as [number, number, number];
-    await upsertReflection({
+  const energyRows: NewEnergyReflection[] = arc.map((tuple, i) => {
+    const [energy, workload, satisfaction] = tuple;
+    return {
+      id: demoId(),
       weekStart: addWeeks(week, -(arc.length - 1 - i)),
       energy,
       workload,
       satisfaction,
       note: notes[i] ?? "",
-    });
-  }
+      createdAt: now,
+      updatedAt: now,
+    };
+  });
+  await db.insert(energyReflections).values(energyRows);
+}
+
+/** Delete only the demo rows — the user's own entries are left untouched. */
+export async function removeDemoData(): Promise<void> {
+  const db = await getDb();
+  const pattern = `${DEMO_PREFIX}%`;
+  // Children before parents (FK-safe), mirroring the backup import order.
+  await db.delete(achievements).where(like(achievements.id, pattern));
+  await db.delete(mentoringSessions).where(like(mentoringSessions.id, pattern));
+  await db.delete(goals).where(like(goals.id, pattern));
+  await db.delete(people).where(like(people.id, pattern));
+  await db.delete(enablement).where(like(enablement.id, pattern));
+  await db.delete(energyReflections).where(like(energyReflections.id, pattern));
 }
 
 /**
- * Seed once on a brand-new, empty database (showcase). Guarded by a localStorage
- * flag so clearing data does NOT silently re-seed.
+ * Whether any demo data is currently loaded. The demo set always includes
+ * goals and achievements, so checking those two is sufficient.
  */
-export async function autoSeedIfEmpty(): Promise<void> {
-  if (typeof localStorage === "undefined") return;
-  if (localStorage.getItem(SEED_FLAG)) return;
-
-  // Respect the user's "Sample data" preference — if they turned it off to use
-  // the app for real, never auto-seed.
-  if (localStorage.getItem(SAMPLE_PREF) === "false") {
-    localStorage.setItem(SEED_FLAG, "1");
-    return;
-  }
-
+export async function hasDemoData(): Promise<boolean> {
   const db = await getDb();
-  const existing = await db
-    .select({ id: achievements.id })
-    .from(achievements)
-    .limit(1);
-  if (existing.length === 0) {
-    await seedSampleData();
-  }
-  localStorage.setItem(SEED_FLAG, "1");
+  const pattern = `${DEMO_PREFIX}%`;
+  const [g, a] = await Promise.all([
+    db
+      .select({ id: goals.id })
+      .from(goals)
+      .where(like(goals.id, pattern))
+      .limit(1),
+    db
+      .select({ id: achievements.id })
+      .from(achievements)
+      .where(like(achievements.id, pattern))
+      .limit(1),
+  ]);
+  return g.length > 0 || a.length > 0;
 }
